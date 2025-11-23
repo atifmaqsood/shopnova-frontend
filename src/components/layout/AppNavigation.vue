@@ -112,7 +112,10 @@
           <v-menu offset-y v-if="isAuthenticated">
             <template v-slot:activator="{ on, attrs }">
               <v-btn icon class="mx-1" v-bind="attrs" v-on="on">
-                <v-icon>mdi-account-circle</v-icon>
+                <v-avatar size="32">
+                  <v-img v-if="user?.profileImage" :src="getUserImage(user.profileImage)" />
+                  <v-icon v-else>mdi-account-circle</v-icon>
+                </v-avatar>
               </v-btn>
             </template>
             <v-card min-width="200">
@@ -217,6 +220,7 @@ export default {
     ...mapGetters({
       isAuthenticated: 'auth/isAuthenticated',
       isAdmin: 'auth/isAdmin',
+      user: 'auth/user',
       cartItemCount: 'cart/itemCount',
       unreadCount: 'notifications/unreadCount',
       categories: 'categories/categories',
@@ -248,6 +252,13 @@ export default {
         message: 'Notifications page coming soon!',
         color: 'info'
       })
+    },
+    getUserImage(profileImage) {
+      if (!profileImage) return ''
+      if (profileImage.startsWith('/uploads/')) {
+        return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${profileImage}`
+      }
+      return profileImage
     }
   }
 }

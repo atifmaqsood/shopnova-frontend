@@ -1,10 +1,15 @@
 <template>
   <v-app :dark="$store.getters['ui/darkMode']">
-    <AppNavigation />
-    <v-main class="main-content">
+    <template v-if="!isAdminRoute">
+      <AppNavigation />
+      <v-main class="main-content">
+        <router-view />
+      </v-main>
+      <Footer />
+    </template>
+    <template v-else>
       <router-view />
-    </v-main>
-    <Footer />
+    </template>
     <AppSnackbar />
     <AppLoader />
   </v-app>
@@ -23,6 +28,11 @@ export default {
     Footer,
     AppSnackbar,
     AppLoader
+  },
+  computed: {
+    isAdminRoute() {
+      return this.$route.path.startsWith('/admin')
+    }
   },
   async created() {
     try {

@@ -72,32 +72,30 @@
         </div>
         <v-row>
           <v-col
-            v-for="category in (categories || [])"
+            v-for="category in (categories || []).slice(0, 6)"
             :key="category.id"
             cols="6"
-            sm="6"
+            sm="4"
             md="4"
-            lg="3"
+            lg="2"
           >
             <v-card
               class="category-card elevation-4"
               hover
               @click="filterByCategory(category.id)"
+              height="180"
             >
-              <v-img
-                :src="getCategoryImage(category.name)"
-                height="220"
-                class="category-image"
-              >
-                <div class="category-overlay">
-                  <v-card-title class="category-title white--text text-h5 font-weight-bold justify-center">
-                    {{ category.name }}
-                  </v-card-title>
-                  <div class="category-icon">
-                    <v-icon large color="white">mdi-arrow-right-circle</v-icon>
-                  </div>
+              <div class="category-content">
+                <div class="category-main-icon mb-2">
+                  <v-icon size="48" style="color: white !important;">{{ getCategoryIcon(category.name) }}</v-icon>
                 </div>
-              </v-img>
+                <h3 class="category-title text-subtitle-1 font-weight-bold text-center" style="color: white !important; letter-spacing: 0.5px;">
+                  {{ category.name }}
+                </h3>
+                <div class="category-arrow-icon">
+                  <v-icon style="color: white !important;">mdi-arrow-right-circle</v-icon>
+                </div>
+              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -315,6 +313,31 @@ export default {
     getCategoryImage(categoryName) {
       return `https://via.placeholder.com/300x200/1976D2/FFFFFF?text=${encodeURIComponent(categoryName)}`
     },
+    getCategoryIcon(categoryName) {
+      const iconMap = {
+        'Electronics': 'mdi-cellphone-link',
+        'Clothing': 'mdi-tshirt-crew-outline',
+        'Books': 'mdi-book-open-variant',
+        'Home & Garden': 'mdi-home-city',
+        'Sports': 'mdi-basketball',
+        'Beauty': 'mdi-face-woman-shimmer',
+        'Toys': 'mdi-teddy-bear',
+        'Automotive': 'mdi-car-sports',
+        'Health': 'mdi-heart-pulse',
+        'Food': 'mdi-food-variant',
+        'Jewelry': 'mdi-ring',
+        'Music': 'mdi-headphones',
+        'Furniture': 'mdi-chair-rolling',
+        'Fashion': 'mdi-sunglasses',
+        'Shoes': 'mdi-shoe-sneaker',
+        'Bags': 'mdi-bag-personal',
+        'Watches': 'mdi-watch',
+        'Kitchen': 'mdi-chef-hat',
+        'Gaming': 'mdi-gamepad-variant',
+        'Pets': 'mdi-paw'
+      }
+      return iconMap[categoryName] || 'mdi-store'
+    },
     subscribe() {
       if (this.email) {
         this.$store.dispatch('ui/showSnackbar', {
@@ -420,62 +443,127 @@ export default {
 /* Categories Section */
 .category-card {
   cursor: pointer;
-  border-radius: 16px !important;
+  border-radius: 20px !important;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
   position: relative;
+  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-card:nth-child(6n+1) {
+  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
+}
+
+.category-card:nth-child(6n+2) {
+  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
+  box-shadow: 0 4px 15px rgba(233, 30, 99, 0.15);
+}
+
+.category-card:nth-child(6n+3) {
+  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15);
+}
+
+.category-card:nth-child(6n+4) {
+  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.15);
+}
+
+.category-card:nth-child(6n+5) {
+  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
+  box-shadow: 0 4px 15px rgba(156, 39, 176, 0.15);
+}
+
+.category-card:nth-child(6n+6) {
+  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
+  box-shadow: 0 4px 15px rgba(0, 150, 136, 0.15);
 }
 
 .category-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(25, 118, 210, 0.3) !important;
+  transform: translateY(-6px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15) !important;
 }
 
-.category-image {
-  position: relative;
-  transition: transform 0.4s ease;
+.category-card:nth-child(6n+1):hover {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  box-shadow: 0 12px 25px rgba(33, 150, 243, 0.3) !important;
 }
 
-.category-card:hover .category-image {
-  transform: scale(1.1);
+.category-card:nth-child(6n+2):hover {
+  background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
+  box-shadow: 0 12px 25px rgba(233, 30, 99, 0.3) !important;
 }
 
-.category-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.7));
+.category-card:nth-child(6n+3):hover {
+  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+  box-shadow: 0 12px 25px rgba(76, 175, 80, 0.3) !important;
+}
+
+.category-card:nth-child(6n+4):hover {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  box-shadow: 0 12px 25px rgba(255, 152, 0, 0.3) !important;
+}
+
+.category-card:nth-child(6n+5):hover {
+  background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+  box-shadow: 0 12px 25px rgba(156, 39, 176, 0.3) !important;
+}
+
+.category-card:nth-child(6n+6):hover {
+  background: linear-gradient(135deg, #009688 0%, #00695c 100%);
+  box-shadow: 0 12px 25px rgba(0, 150, 136, 0.3) !important;
+}
+
+.category-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: background 0.3s ease;
+  height: 100%;
+  text-align: center;
 }
 
-.category-card:hover .category-overlay {
-  background: linear-gradient(to bottom, rgba(25,118,210,0.6), rgba(25,118,210,0.9));
+.category-main-icon {
+  transform: scale(0.9);
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
+.category-card:hover .category-main-icon {
+  transform: scale(1);
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.6));
 }
 
 .category-title {
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  transition: transform 0.3s ease;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  transition: all 0.3s ease;
+  font-weight: 700 !important;
+  text-align: center;
+  line-height: 1.2 !important;
+  margin: 8px 0 !important;
 }
 
 .category-card:hover .category-title {
-  transform: translateY(-10px);
+  transform: translateY(-4px);
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.7) !important;
 }
 
-.category-icon {
+.category-arrow-icon {
   opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.3s ease;
+  transform: translateY(20px) scale(0.8);
+  transition: all 0.4s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
-.category-card:hover .category-icon {
+.category-card:hover .category-arrow-icon {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7));
 }
 
 /* Features Section */

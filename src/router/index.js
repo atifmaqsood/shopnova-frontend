@@ -22,6 +22,10 @@ const routes = [
     props: true
   },
   {
+    path: '/product/:id',
+    redirect: to => `/products/${to.params.id}`
+  },
+  {
     path: '/cart',
     name: 'Cart',
     component: () => import('../views/Cart.vue'),
@@ -87,6 +91,24 @@ const routes = [
     name: 'AdminProducts',
     component: () => import('../views/AdminProducts.vue'),
     meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/categories',
+    name: 'AdminCategories',
+    component: () => import('../views/AdminCategories.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/orders',
+    name: 'AdminOrders',
+    component: () => import('../views/AdminOrders.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/admin/users',
+    name: 'AdminUsers',
+    component: () => import('../views/AdminUsers.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -97,18 +119,39 @@ const router = new VueRouter({
 })
 
 // Navigation guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+  const token = localStorage.getItem('token')
   const isAuthenticated = store.getters['auth/isAuthenticated']
+  const user = store.getters['auth/user']
+
+  // If we have a token but no user, try to fetch profile
+  if (token && !user) {
+    try {
+      await store.dispatch('auth/fetchProfile')
+    } catch (error) {
+      store.dispatch('auth/logout')
+      if (to.matched.some(record => record.meta.requiresAuth)) {
+        next('/login')
+        return
+      }
+    }
+  }
+
+  const finalIsAuthenticated = store.getters['auth/isAuthenticated']
   const isAdmin = store.getters['auth/isAdmin']
 
   if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isAuthenticated) {
+    if (!finalIsAuthenticated) {
       next('/login')
       return
     }
   }
 
   if (to.matched.some(record => record.meta.requiresAdmin)) {
+    if (!finalIsAuthenticated) {
+      next('/login')
+      return
+    }
     if (!isAdmin) {
       next('/')
       return
@@ -116,7 +159,7 @@ router.beforeEach((to, from, next) => {
   }
 
   if (to.matched.some(record => record.meta.guest)) {
-    if (isAuthenticated) {
+    if (finalIsAuthenticated) {
       next('/')
       return
     }

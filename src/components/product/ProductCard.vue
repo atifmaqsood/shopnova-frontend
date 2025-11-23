@@ -1,13 +1,20 @@
 <template>
   <v-card class="product-card" hover>
-    <v-img
-      :src="productImage"
-      height="200"
-      class="white--text align-end"
-      @click="goToProduct"
-    >
-      <v-card-title class="text-h6">{{ product.name }}</v-card-title>
-    </v-img>
+    <div class="product-image-area" @click="goToProduct">
+      <v-img
+        :src="productImage"
+        height="200"
+        class="white--text align-end"
+        @error="imageError = true"
+      >
+        <template v-slot:placeholder>
+          <div class="icon-fallback">
+            <v-icon size="80" color="primary">mdi-package-variant</v-icon>
+          </div>
+        </template>
+        <v-card-title class="text-h6 product-title-overlay">{{ product.name }}</v-card-title>
+      </v-img>
+    </div>
 
     <v-card-text>
       <div class="text--primary">
@@ -58,7 +65,8 @@ export default {
   },
   data() {
     return {
-      adding: false
+      adding: false,
+      imageError: false
     }
   },
   computed: {
@@ -66,15 +74,14 @@ export default {
       isAuthenticated: 'auth/isAuthenticated'
     }),
     productImage() {
-      if (this.product.images && this.product.images.length > 0) {
+      if (this.product.images && this.product.images.length > 0 && this.product.images[0]) {
         const imageUrl = this.product.images[0]
-        // If it's a relative URL, prepend the API base URL
         if (imageUrl.startsWith('/uploads/')) {
           return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${imageUrl}`
         }
         return imageUrl
       }
-      return `https://via.placeholder.com/300x200/1976D2/FFFFFF?text=${encodeURIComponent(this.product.name)}`
+      return 'https://via.placeholder.com/1x1/transparent/transparent.png'
     },
     truncatedDescription() {
       if (this.product.description.length > 100) {
@@ -142,4 +149,43 @@ export default {
 .v-card__text {
   flex-grow: 1;
 }
+
+.product-image-area {
+  cursor: pointer;
+}
+
+.icon-fallback {
+  height: 200px;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border: 1px solid #ddd;
+}
+
+
+
+.product-title-overlay {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px);
+  margin: 0 !important;
+  padding: 12px 16px !important;
+}
+
+.product-name-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(25, 118, 210, 0.9);
+  color: white;
+  padding: 12px 16px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+
 </style>

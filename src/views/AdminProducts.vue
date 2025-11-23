@@ -1,23 +1,21 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="12">
-        <h1 class="display-1 mb-6">Product Management</h1>
-        <v-btn color="primary" @click="showAddDialog = true" class="mb-4">
+  <AdminLayout>
+    <div class="products-content">
+      <div class="page-header mb-6">
+        <h1 class="page-title">Product Management</h1>
+        <v-btn color="primary" large @click="showAddDialog = true">
           <v-icon left>mdi-plus</v-icon>
           Add New Product
         </v-btn>
-      </v-col>
-    </v-row>
+      </div>
 
-    <!-- Products List -->
-    <v-row>
-      <v-col cols="12">
+      <!-- Products List -->
+      <v-card class="products-table">
         <v-data-table
           :headers="headers"
           :items="products"
           :loading="loading"
-          class="elevation-1"
+          class="elevation-0"
         >
           <template slot="item.images" slot-scope="{ item }">
             <v-avatar size="40" class="ma-1">
@@ -36,8 +34,8 @@
             </v-btn>
           </template>
         </v-data-table>
-      </v-col>
-    </v-row>
+      </v-card>
+    </div>
 
     <!-- Add/Edit Product Dialog -->
     <v-dialog v-model="showAddDialog" max-width="800px" persistent>
@@ -177,14 +175,18 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </AdminLayout>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import AdminLayout from '@/components/AdminLayout.vue'
 
 export default {
   name: 'AdminProducts',
+  components: {
+    AdminLayout
+  },
   data() {
     return {
       showAddDialog: false,
@@ -353,3 +355,39 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.products-content {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.products-table {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+</style>
