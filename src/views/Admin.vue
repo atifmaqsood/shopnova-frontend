@@ -25,6 +25,14 @@
       <!-- Admin Content -->
       <v-col cols="12" md="10">
         <h1 class="display-1 mb-6">Admin Dashboard</h1>
+        <v-row class="mb-4">
+          <v-col cols="12">
+            <v-btn color="primary" large @click="$router.push('/admin/products')">
+              <v-icon left>mdi-package-variant</v-icon>
+              Manage Products
+            </v-btn>
+          </v-col>
+        </v-row>
         <v-row>
           <v-col cols="12" sm="6" md="3">
             <v-card color="primary" dark>

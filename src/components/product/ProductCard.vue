@@ -67,7 +67,12 @@ export default {
     }),
     productImage() {
       if (this.product.images && this.product.images.length > 0) {
-        return this.product.images[0]
+        const imageUrl = this.product.images[0]
+        // If it's a relative URL, prepend the API base URL
+        if (imageUrl.startsWith('/uploads/')) {
+          return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${imageUrl}`
+        }
+        return imageUrl
       }
       return `https://via.placeholder.com/300x200/1976D2/FFFFFF?text=${encodeURIComponent(this.product.name)}`
     },

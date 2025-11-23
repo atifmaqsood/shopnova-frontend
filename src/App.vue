@@ -4,6 +4,7 @@
     <v-main class="main-content">
       <router-view />
     </v-main>
+    <Footer />
     <AppSnackbar />
     <AppLoader />
   </v-app>
@@ -11,6 +12,7 @@
 
 <script>
 import AppNavigation from './components/layout/AppNavigation.vue'
+import Footer from './components/Footer.vue'
 import AppSnackbar from './components/common/AppSnackbar.vue'
 import AppLoader from './components/common/AppLoader.vue'
 
@@ -18,6 +20,7 @@ export default {
   name: 'App',
   components: {
     AppNavigation,
+    Footer,
     AppSnackbar,
     AppLoader
   },
