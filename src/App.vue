@@ -1,28 +1,58 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-app :dark="$store.getters['ui/darkMode']">
+    <AppNavigation />
+    <v-main class="main-content">
+      <router-view />
+    </v-main>
+    <AppSnackbar />
+    <AppLoader />
+  </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import AppNavigation from './components/layout/AppNavigation.vue'
+import AppSnackbar from './components/common/AppSnackbar.vue'
+import AppLoader from './components/common/AppLoader.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    AppNavigation,
+    AppSnackbar,
+    AppLoader
+  },
+  async created() {
+    try {
+      await this.$store.dispatch('auth/initializeAuth')
+      await this.$store.dispatch('categories/fetchCategories')
+    } catch (error) {
+      console.warn('App initialization error:', error.message)
+      this.$store.dispatch('ui/showSnackbar', {
+        message: 'Unable to connect to server. Please check if the backend is running.',
+        color: 'warning',
+        timeout: 8000
+      })
+    }
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+.main-content {
+  padding-top: 70px !important;
+}
+
+.main-content .v-main__wrap {
+  padding-top: 0 !important;
+}
+
+/* Ensure navbar stays on top */
+.v-app-bar {
+  z-index: 1001 !important;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.2s ease;
 }
 </style>
