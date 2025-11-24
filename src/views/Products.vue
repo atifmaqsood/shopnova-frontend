@@ -141,12 +141,13 @@
                       placeholder="Search products by name..."
                       class="search-input-products"
                       @keyup.enter="search"
+                      @input="onSearchInput"
                     />
                     <v-btn
                       v-if="searchQuery"
                       icon
                       small
-                      @click="searchQuery = ''; search()"
+                      @click="clearSearch"
                     >
                       <v-icon small>mdi-close</v-icon>
                     </v-btn>
@@ -188,7 +189,7 @@
             <v-col
               v-for="product in products"
               :key="product.id"
-              cols="6"
+              cols="12"
               sm="6"
               md="4"
               lg="4"
@@ -257,6 +258,7 @@ export default {
       searchQuery: '',
       priceRange: [0, 1000],
       sortBy: 'newest',
+      searchDebounce: null,
       sortOptions: [
         { text: 'Newest', value: 'newest' },
         { text: 'Price: Low to High', value: 'price_asc' },
@@ -299,10 +301,13 @@ export default {
     '$route.query': {
       handler() {
         this.initializeFromQuery()
-        this.fetchProducts()
       },
       immediate: true
     }
+  },
+  async mounted() {
+    // Fetch all products once on mount
+    await this.$store.dispatch('products/fetchAllProducts')
   },
   methods: {
     initializeFromQuery() {
@@ -318,15 +323,31 @@ export default {
       
       this.$store.dispatch('products/setFilters', filters)
     },
+    onSearchInput() {
+      // Clear existing timer
+      if (this.searchDebounce) {
+        clearTimeout(this.searchDebounce)
+      }
+      
+      // Set new timer for live search (300ms delay)
+      this.searchDebounce = setTimeout(() => {
+        this.search()
+      }, 300)
+    },
     search() {
       this.applyFilters()
+    },
+    clearSearch() {
+      this.searchQuery = ''
+      this.search()
     },
     applyFilters() {
       const filters = {
         search: this.searchQuery || '',
         categoryId: this.filters.categoryId || null,
         minPrice: this.priceRange[0] > 0 ? this.priceRange[0] : null,
-        maxPrice: this.priceRange[1] < 1000 ? this.priceRange[1] : null
+        maxPrice: this.priceRange[1] < 1000 ? this.priceRange[1] : null,
+        sortBy: this.sortBy || 'newest'
       }
       this.$store.dispatch('products/setFilters', filters)
     },
@@ -347,9 +368,6 @@ export default {
     },
     changePage(page) {
       this.$store.dispatch('products/setPage', page)
-    },
-    fetchProducts() {
-      this.$store.dispatch('products/fetchProducts')
     }
   }
 }

@@ -44,21 +44,6 @@
       </v-carousel>
     </section>
 
-    <!-- Quick Stats Section -->
-    <section class="stats-section py-8">
-      <v-container>
-        <v-row>
-          <v-col cols="6" md="3" class="text-center" v-for="stat in stats" :key="stat.title">
-            <div class="stat-card pa-4">
-              <v-icon size="48" :color="stat.color" class="mb-3">{{ stat.icon }}</v-icon>
-              <h3 class="text-h4 font-weight-bold primary--text">{{ stat.value }}</h3>
-              <p class="text-body-2 grey--text text--darken-1">{{ stat.title }}</p>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
-    </section>
-
     <!-- Categories Section -->
     <section class="categories-section py-12 grey lighten-5">
       <v-container>
@@ -85,6 +70,50 @@
               @click="filterByCategory(category.id)"
               height="180"
             >
+              <!-- SVG Pattern Background -->
+              <svg class="category-bg-pattern" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                  <linearGradient :id="'grad-' + category.id" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" :style="'stop-color:' + getCategoryGradient(category.id).start + ';stop-opacity:1'" />
+                    <stop offset="100%" :style="'stop-color:' + getCategoryGradient(category.id).end + ';stop-opacity:1'" />
+                  </linearGradient>
+                  
+                  <!-- Hexagon Pattern -->
+                  <pattern :id="'hexPattern-' + category.id" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M20,5 L30,12.5 L30,27.5 L20,35 L10,27.5 L10,12.5 Z" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+                  </pattern>
+                  
+                  <!-- Dots Pattern -->
+                  <pattern :id="'dotPattern-' + category.id" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.2)"/>
+                  </pattern>
+                </defs>
+                
+                <!-- Base Gradient Background -->
+                <rect width="200" height="200" :fill="'url(#grad-' + category.id + ')'" />
+                
+                <!-- Decorative Shapes Layer 1 -->
+                <circle cx="-20" cy="-20" r="60" fill="rgba(255,255,255,0.08)" />
+                <circle cx="220" cy="220" r="80" fill="rgba(0,0,0,0.08)" />
+                <circle cx="200" cy="20" r="50" fill="rgba(255,255,255,0.06)" />
+                <circle cx="20" cy="180" r="40" fill="rgba(0,0,0,0.06)" />
+                
+                <!-- Hexagon Pattern Overlay -->
+                <rect width="200" height="200" :fill="'url(#hexPattern-' + category.id + ')'" />
+                
+                <!-- Diagonal Stripes -->
+                <path d="M0,0 L200,200 M-50,50 L150,250 M50,-50 L250,150" stroke="rgba(255,255,255,0.08)" stroke-width="30" />
+                
+                <!-- Bottom Wave -->
+                <path d="M0,140 Q50,120 100,140 T200,140 L200,200 L0,200 Z" fill="rgba(0,0,0,0.1)" />
+                
+                <!-- Top Corner Accent -->
+                <path d="M0,0 L80,0 L0,80 Z" fill="rgba(255,255,255,0.12)" />
+                
+                <!-- Dots Pattern Overlay -->
+                <rect width="200" height="200" :fill="'url(#dotPattern-' + category.id + ')'" opacity="0.5" />
+              </svg>
+              
               <div class="category-content">
                 <div class="category-main-icon mb-2">
                   <v-icon size="48" style="color: white !important;">{{ getCategoryIcon(category.name) }}</v-icon>
@@ -117,7 +146,7 @@
           <v-col
             v-for="product in featuredProducts"
             :key="product.id"
-            cols="6"
+            cols="12"
             sm="6"
             md="4"
             lg="3"
@@ -147,9 +176,47 @@
       </v-container>
     </section>
 
-    <!-- Features Section -->
-    <section class="features-section py-12 grey lighten-5">
+    <!-- Trending Products Section -->
+    <section class="trending-section py-12 grey lighten-5">
       <v-container>
+        <div class="section-header text-center mb-10">
+          <v-chip color="primary" label class="mb-4">
+            <v-icon left small>mdi-fire</v-icon>
+            Trending Now
+          </v-chip>
+          <h2 class="section-title text-h3 font-weight-bold primary--text mb-3">
+            Hot Deals This Week
+          </h2>
+          <p class="section-subtitle text-h6 grey--text text--darken-1">
+            Don't miss out on these amazing offers
+          </p>
+        </div>
+        <v-row v-if="featuredProducts.length > 0">
+          <v-col
+            v-for="product in featuredProducts.slice(0, 4)"
+            :key="'trending-' + product.id"
+            cols="12"
+            sm="6"
+            md="3"
+          >
+            <ProductCard :product="product" />
+          </v-col>
+        </v-row>
+      </v-container>
+    </section>
+
+    <!-- Features Section with Stats -->
+    <section class="features-section py-16">
+      <v-container>
+        <div class="section-header text-center mb-12">
+          <h2 class="section-title text-h3 font-weight-bold primary--text mb-3">
+            Why Shop With Us?
+          </h2>
+          <p class="section-subtitle text-h6 grey--text text--darken-1">
+            Experience the best in online shopping
+          </p>
+        </div>
+        
         <v-row>
           <v-col
             v-for="feature in features"
@@ -158,59 +225,67 @@
             sm="6"
             md="3"
           >
-            <v-card class="feature-card text-center pa-6" elevation="0">
+            <v-card class="feature-card text-center pa-6 h-100" elevation="0" outlined>
               <v-avatar size="80" :color="feature.color" class="mb-4">
                 <v-icon size="40" color="white">{{ feature.icon }}</v-icon>
               </v-avatar>
               <h4 class="text-h6 font-weight-bold mb-2">{{ feature.title }}</h4>
-              <p class="text-body-2 grey--text">{{ feature.description }}</p>
+              <p class="text-body-2 grey--text mb-0">{{ feature.description }}</p>
             </v-card>
           </v-col>
         </v-row>
       </v-container>
     </section>
 
-    <!-- Newsletter Section -->
-    <section class="newsletter-section py-16 primary">
+    <!-- Customer Testimonials Slider -->
+    <section class="testimonials-section py-16 grey lighten-5">
       <v-container>
-        <v-row align="center" justify="center">
-          <v-col cols="12" md="8" lg="6" class="text-center">
-            <v-icon size="64" color="white" class="mb-4">mdi-email-outline</v-icon>
-            <h3 class="text-h3 font-weight-bold white--text mb-4">
-              Stay Updated
-            </h3>
-            <p class="text-h6 white--text mb-8 font-weight-light">
-              Subscribe to our newsletter and get exclusive deals, new arrivals, and special offers
-            </p>
-            <v-card elevation="8" class="newsletter-card pa-2">
-              <v-row no-gutters>
-                <v-col cols="12" sm="8">
-                  <v-text-field
-                    v-model="email"
-                    placeholder="Enter your email address"
-                    hide-details
-                    solo
-                    flat
-                    class="newsletter-input"
-                  />
-                </v-col>
-                <v-col cols="12" sm="4">
-                  <v-btn
-                    color="primary"
-                    block
-                    x-large
-                    elevation="0"
-                    @click="subscribe"
-                    class="newsletter-btn"
-                  >
-                    Subscribe
-                    <v-icon right>mdi-send</v-icon>
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </v-card>
-          </v-col>
-        </v-row>
+        <div class="section-header text-center mb-12">
+          <v-chip color="success" label class="mb-4">
+            <v-icon left small>mdi-star</v-icon>
+            Customer Reviews
+          </v-chip>
+          <h2 class="section-title text-h3 font-weight-bold primary--text mb-3">
+            What Our Customers Say
+          </h2>
+          <p class="section-subtitle text-h6 grey--text text--darken-1">
+            Join thousands of satisfied customers
+          </p>
+        </div>
+        
+        <v-carousel
+          cycle
+          height="auto"
+          hide-delimiters
+          show-arrows-on-hover
+          interval="5000"
+          class="testimonial-carousel"
+        >
+          <v-carousel-item
+            v-for="(testimonial, index) in testimonials"
+            :key="index"
+          >
+            <v-row justify="center" class="fill-height ma-0">
+              <v-col cols="12" md="8" lg="6">
+                <v-card class="testimonial-card pa-8" elevation="8">
+                  <div class="text-center mb-6">
+                    <v-avatar size="80" :color="testimonial.color" class="mb-4">
+                      <span class="white--text text-h4 font-weight-bold">{{ testimonial.initial }}</span>
+                    </v-avatar>
+                    <h4 class="text-h5 font-weight-bold mb-2">{{ testimonial.name }}</h4>
+                    <div class="rating mb-2 justify-center">
+                      <v-icon v-for="i in 5" :key="i" color="amber" size="24">mdi-star</v-icon>
+                    </div>
+                    <p class="text-caption grey--text">{{ testimonial.date }}</p>
+                  </div>
+                  <p class="text-h6 grey--text text--darken-2 testimonial-text text-center">
+                    "{{ testimonial.review }}"
+                  </p>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-carousel-item>
+        </v-carousel>
       </v-container>
     </section>
   </div>
@@ -227,7 +302,6 @@ export default {
   },
   data() {
     return {
-      email: '',
       heroSlides: [
         {
           title: 'Welcome to ShopNova',
@@ -246,12 +320,6 @@ export default {
         }
       ],
       featuredProducts: [],
-      stats: [
-        { icon: 'mdi-package-variant', value: '1000+', title: 'Products', color: 'primary' },
-        { icon: 'mdi-truck-fast', value: 'Free', title: 'Shipping', color: 'success' },
-        { icon: 'mdi-shield-check', value: '100%', title: 'Secure', color: 'warning' },
-        { icon: 'mdi-head-question', value: '24/7', title: 'Support', color: 'info' }
-      ],
       features: [
         {
           icon: 'mdi-truck-delivery',
@@ -276,6 +344,29 @@ export default {
           title: '24/7 Support',
           description: 'Dedicated customer support',
           color: 'info'
+        }
+      ],
+      testimonials: [
+        {
+          name: 'Sarah Johnson',
+          initial: 'SJ',
+          color: 'purple',
+          date: '2 weeks ago',
+          review: 'Amazing shopping experience! The products are high quality and delivery was super fast. Will definitely shop here again.'
+        },
+        {
+          name: 'Michael Chen',
+          initial: 'MC',
+          color: 'blue',
+          date: '1 month ago',
+          review: 'Best online store I\'ve used. Great customer service, easy returns, and the prices are unbeatable. Highly recommended!'
+        },
+        {
+          name: 'Emily Rodriguez',
+          initial: 'ER',
+          color: 'pink',
+          date: '3 weeks ago',
+          review: 'Love the variety of products and the website is so easy to navigate. My order arrived perfectly packaged and on time.'
         }
       ]
     }
@@ -338,14 +429,18 @@ export default {
       }
       return iconMap[categoryName] || 'mdi-store'
     },
-    subscribe() {
-      if (this.email) {
-        this.$store.dispatch('ui/showSnackbar', {
-          message: 'Thank you for subscribing!',
-          color: 'success'
-        })
-        this.email = ''
-      }
+    getCategoryGradient(categoryId) {
+      const gradients = [
+        { start: '#2196f3', end: '#1976d2' }, // Blue
+        { start: '#e91e63', end: '#c2185b' }, // Pink
+        { start: '#4caf50', end: '#388e3c' }, // Green
+        { start: '#ff9800', end: '#f57c00' }, // Orange
+        { start: '#9c27b0', end: '#7b1fa2' }, // Purple
+        { start: '#009688', end: '#00695c' }, // Teal
+        { start: '#f44336', end: '#d32f2f' }, // Red
+        { start: '#3f51b5', end: '#303f9f' }, // Indigo
+      ]
+      return gradients[(categoryId - 1) % gradients.length]
     }
   }
 }
@@ -405,19 +500,6 @@ export default {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
 }
 
-/* Stats Section */
-.stats-section {
-  background: linear-gradient(135deg, #f5f7fa 0%, #e3e8f0 100%);
-}
-
-.stat-card {
-  transition: transform 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-5px);
-}
-
 /* Section Headers */
 .section-header {
   margin-bottom: 48px;
@@ -447,76 +529,29 @@ export default {
   overflow: hidden;
   transition: all 0.3s ease;
   position: relative;
-  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
-  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.category-card:nth-child(6n+1) {
-  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
-  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
-}
-
-.category-card:nth-child(6n+2) {
-  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
-  box-shadow: 0 4px 15px rgba(233, 30, 99, 0.15);
-}
-
-.category-card:nth-child(6n+3) {
-  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15);
-}
-
-.category-card:nth-child(6n+4) {
-  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.15);
-}
-
-.category-card:nth-child(6n+5) {
-  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
-  box-shadow: 0 4px 15px rgba(156, 39, 176, 0.15);
-}
-
-.category-card:nth-child(6n+6) {
-  background: linear-gradient(135deg, #929ca3 0%, #689cc7 100%);
-  box-shadow: 0 4px 15px rgba(0, 150, 136, 0.15);
+.category-bg-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }
 
 .category-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25) !important;
 }
 
-.category-card:nth-child(6n+1):hover {
-  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-  box-shadow: 0 12px 25px rgba(33, 150, 243, 0.3) !important;
-}
-
-.category-card:nth-child(6n+2):hover {
-  background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%);
-  box-shadow: 0 12px 25px rgba(233, 30, 99, 0.3) !important;
-}
-
-.category-card:nth-child(6n+3):hover {
-  background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
-  box-shadow: 0 12px 25px rgba(76, 175, 80, 0.3) !important;
-}
-
-.category-card:nth-child(6n+4):hover {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-  box-shadow: 0 12px 25px rgba(255, 152, 0, 0.3) !important;
-}
-
-.category-card:nth-child(6n+5):hover {
-  background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
-  box-shadow: 0 12px 25px rgba(156, 39, 176, 0.3) !important;
-}
-
-.category-card:nth-child(6n+6):hover {
-  background: linear-gradient(135deg, #009688 0%, #00695c 100%);
-  box-shadow: 0 12px 25px rgba(0, 150, 136, 0.3) !important;
+.category-card:hover .category-bg-pattern {
+  transform: scale(1.05);
+  transition: transform 0.3s ease;
 }
 
 .category-content {
@@ -526,6 +561,8 @@ export default {
   justify-content: center;
   height: 100%;
   text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .category-main-icon {
@@ -585,6 +622,81 @@ export default {
 
 .feature-card:hover .v-avatar {
   transform: rotate(360deg);
+}
+
+/* Trending Section */
+.trending-section {
+  position: relative;
+}
+
+/* Features Section */
+.features-section {
+  background: white;
+}
+
+.feature-card {
+  background: white;
+  border-radius: 16px !important;
+  transition: all 0.3s ease;
+  height: 100%;
+  border: 2px solid #e0e0e0;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1) !important;
+  border-color: #0ea5e9;
+}
+
+.feature-card .v-avatar {
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .v-avatar {
+  transform: rotate(360deg);
+}
+
+/* Testimonials Section */
+.testimonials-section {
+  position: relative;
+}
+
+.testimonial-carousel {
+  border-radius: 16px;
+  overflow: visible !important;
+}
+
+.testimonial-carousel >>> .v-window__container {
+  padding: 20px 0;
+}
+
+.testimonial-card {
+  border-radius: 20px !important;
+  background: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.3s ease;
+}
+
+.testimonial-text {
+  font-style: italic;
+  line-height: 1.8;
+  font-weight: 400;
+  position: relative;
+}
+
+.testimonial-text::before {
+  content: '"';
+  font-size: 4rem;
+  position: absolute;
+  top: -20px;
+  left: -10px;
+  color: rgba(14, 165, 233, 0.2);
+  font-family: Georgia, serif;
+}
+
+.rating {
+  display: flex;
+  gap: 4px;
 }
 
 /* Newsletter Section */

@@ -6,11 +6,14 @@
           <!-- Brand Section -->
           <v-col cols="12" md="4" class="mb-6">
             <div class="brand-section">
-              <h2 class="brand-title">ShopNova</h2>
+              <div class="footer-logo mb-4">
+                <v-icon size="40" color="white" class="mr-2">mdi-shopping</v-icon>
+                <h2 class="brand-title d-inline">ShopNova</h2>
+              </div>
               <p class="brand-description">
                 Your premier destination for quality products and exceptional shopping experience.
               </p>
-              <div class="social-links">
+              <div class="social-links mt-6">
                 <v-btn icon class="social-btn" href="#" aria-label="Facebook">
                   <v-icon>mdi-facebook</v-icon>
                 </v-btn>
@@ -33,9 +36,9 @@
               <h3 class="section-title">Shop</h3>
               <ul class="footer-links">
                 <li><router-link to="/products">All Products</router-link></li>
-                <li><router-link to="/categories">Categories</router-link></li>
-                <li><router-link to="/deals">Special Deals</router-link></li>
-                <li><router-link to="/new-arrivals">New Arrivals</router-link></li>
+                <li><router-link to="/products">Categories</router-link></li>
+                <li><router-link to="/products">New Arrivals</router-link></li>
+                <li><router-link to="/products">Best Sellers</router-link></li>
               </ul>
             </div>
           </v-col>
@@ -45,49 +48,41 @@
             <div class="footer-section">
               <h3 class="section-title">Support</h3>
               <ul class="footer-links">
-                <li><router-link to="/contact">Contact Us</router-link></li>
-                <li><router-link to="/faq">FAQ</router-link></li>
-                <li><router-link to="/shipping">Shipping Info</router-link></li>
-                <li><router-link to="/returns">Returns</router-link></li>
-              </ul>
-            </div>
-          </v-col>
-
-          <!-- Company -->
-          <v-col cols="6" md="2" class="mb-6">
-            <div class="footer-section">
-              <h3 class="section-title">Company</h3>
-              <ul class="footer-links">
-                <li><router-link to="/about">About Us</router-link></li>
-                <li><router-link to="/careers">Careers</router-link></li>
-                <li><router-link to="/press">Press</router-link></li>
-                <li><router-link to="/blog">Blog</router-link></li>
+                <li><router-link to="/account">My Account</router-link></li>
+                <li><router-link to="/orders">Track Order</router-link></li>
+                <li><router-link to="/cart">Shopping Cart</router-link></li>
+                <li><router-link to="/">Help Center</router-link></li>
               </ul>
             </div>
           </v-col>
 
           <!-- Newsletter -->
-          <v-col cols="12" md="2" class="mb-6">
+          <v-col cols="12" md="4" class="mb-6">
             <div class="footer-section">
-              <h3 class="section-title">Newsletter</h3>
-              <p class="newsletter-text">Get updates on new products and exclusive offers</p>
+              <h3 class="section-title">Stay Connected</h3>
+              <p class="newsletter-text">Subscribe to get special offers, free giveaways, and exclusive deals.</p>
               <div class="newsletter-form">
                 <v-text-field
                   v-model="email"
-                  placeholder="Enter email"
+                  placeholder="Your email address"
                   dense
                   outlined
                   hide-details
                   class="newsletter-input"
-                />
-                <v-btn
-                  color="primary"
-                  small
-                  class="newsletter-btn mt-2"
-                  @click="subscribe"
+                  dark
                 >
-                  Subscribe
-                </v-btn>
+                  <template v-slot:append>
+                    <v-btn
+                      color="primary"
+                      small
+                      depressed
+                      class="newsletter-btn-inline"
+                      @click="subscribe"
+                    >
+                      <v-icon small>mdi-send</v-icon>
+                    </v-btn>
+                  </template>
+                </v-text-field>
               </div>
             </div>
           </v-col>
@@ -99,16 +94,19 @@
     <div class="footer-bottom">
       <v-container>
         <v-row align="center">
-          <v-col cols="12" md="6">
-            <p class="copyright">
+          <v-col cols="12" md="6" class="text-center text-md-left">
+            <p class="copyright mb-2">
               © {{ currentYear }} ShopNova. All rights reserved.
             </p>
+            <p class="developer-credit">
+              Developed with <v-icon small color="red" class="mx-1">mdi-heart</v-icon> by <strong>Atif Maqsood</strong>
+            </p>
           </v-col>
-          <v-col cols="12" md="6" class="text-md-right">
+          <v-col cols="12" md="6" class="text-center text-md-right">
             <div class="footer-bottom-links">
-              <router-link to="/privacy">Privacy Policy</router-link>
-              <router-link to="/terms">Terms of Service</router-link>
-              <router-link to="/cookies">Cookie Policy</router-link>
+              <router-link to="/">Privacy Policy</router-link>
+              <router-link to="/">Terms of Service</router-link>
+              <router-link to="/">Cookies</router-link>
             </div>
           </v-col>
         </v-row>
@@ -146,46 +144,71 @@ export default {
 
 <style scoped>
 .modern-footer {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
   color: #ffffff;
   margin-top: auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(14, 165, 233, 0.5), transparent);
 }
 
 .footer-content {
   padding: 60px 0 40px;
+  position: relative;
 }
 
 .brand-section {
-  max-width: 300px;
+  max-width: 350px;
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
 }
 
 .brand-title {
   font-size: 2rem;
-  font-weight: 700;
-  color: #1976d2;
-  margin-bottom: 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
 }
 
 .brand-description {
-  color: #b0b0b0;
-  line-height: 1.6;
-  margin-bottom: 24px;
+  color: #cbd5e1;
+  line-height: 1.7;
+  margin-bottom: 0;
+  font-size: 0.95rem;
 }
 
 .social-links {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .social-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
+  background: rgba(14, 165, 233, 0.1) !important;
+  color: #0ea5e9 !important;
   transition: all 0.3s ease;
+  border: 1px solid rgba(14, 165, 233, 0.2);
 }
 
 .social-btn:hover {
-  background: #1976d2 !important;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
+  color: white !important;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
 }
 
 .footer-section {
@@ -193,10 +216,23 @@ export default {
 }
 
 .section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 20px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 24px;
   color: #ffffff;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+  border-radius: 2px;
 }
 
 .footer-links {
@@ -206,64 +242,101 @@ export default {
 }
 
 .footer-links li {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .footer-links a {
-  color: #b0b0b0;
+  color: #cbd5e1;
   text-decoration: none;
-  transition: color 0.3s ease;
-  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  display: inline-block;
 }
 
 .footer-links a:hover {
-  color: #1976d2;
+  color: #0ea5e9;
+  transform: translateX(5px);
 }
 
 .newsletter-text {
-  color: #b0b0b0;
-  font-size: 0.9rem;
-  margin-bottom: 16px;
-  line-height: 1.5;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  line-height: 1.6;
 }
 
-.newsletter-input {
-  margin-bottom: 8px;
+.newsletter-input >>> .v-input__slot {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(14, 165, 233, 0.3) !important;
 }
 
-.newsletter-btn {
-  width: 100%;
-  text-transform: none;
-  font-weight: 500;
+.newsletter-input >>> input {
+  color: white !important;
+}
+
+.newsletter-input >>> input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.newsletter-btn-inline {
+  margin-right: -8px;
+  border-radius: 4px !important;
 }
 
 .footer-bottom {
   background: rgba(0, 0, 0, 0.3);
-  padding: 20px 0;
+  padding: 24px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .copyright {
-  color: #b0b0b0;
+  color: #94a3b8;
   margin: 0;
   font-size: 0.9rem;
+}
+
+.developer-credit {
+  color: #94a3b8;
+  margin: 0;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.developer-credit strong {
+  color: #0ea5e9;
+  margin-left: 4px;
+}
+
+@media (min-width: 960px) {
+  .developer-credit {
+    justify-content: flex-start;
+  }
 }
 
 .footer-bottom-links {
   display: flex;
   gap: 24px;
-  justify-content: flex-end;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) {
+  .footer-bottom-links {
+    justify-content: flex-end;
+  }
 }
 
 .footer-bottom-links a {
-  color: #b0b0b0;
+  color: #94a3b8;
   text-decoration: none;
   font-size: 0.9rem;
   transition: color 0.3s ease;
 }
 
 .footer-bottom-links a:hover {
-  color: #1976d2;
+  color: #0ea5e9;
 }
 
 @media (max-width: 960px) {
@@ -274,18 +347,15 @@ export default {
   .brand-title {
     font-size: 1.75rem;
   }
-  
-  .footer-bottom-links {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
 }
 
 @media (max-width: 600px) {
   .footer-bottom-links {
-    flex-direction: column;
-    gap: 8px;
+    gap: 16px;
+  }
+  
+  .developer-credit {
+    margin-top: 8px;
   }
 }
 </style>
