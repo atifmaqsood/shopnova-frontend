@@ -36,6 +36,8 @@ const mutations = {
   }
 }
 
+import socketService from '@/services/socket'
+
 const actions = {
   async register({ commit }, userData) {
     const response = await authService.register(userData)
@@ -45,14 +47,17 @@ const actions = {
   async login({ commit, dispatch }, credentials) {
     const response = await authService.login(credentials)
     const { access_token, user } = response.data
-    
+
     commit('SET_TOKEN', access_token)
     commit('SET_USER', user)
-    
+
+    // Initialize socket connection
+    socketService.connect(access_token)
+
     // Initialize user data
     await dispatch('cart/fetchCart', null, { root: true })
     await dispatch('notifications/fetchUnreadCount', null, { root: true })
-    
+
     return response
   },
 
@@ -72,19 +77,27 @@ const actions = {
     return await authService.resetPassword(data)
   },
 
-  async fetchProfile({ commit }) {
+  async fetchProfile({ commit, state }) {
     try {
       const response = await authService.getProfile()
       commit('SET_USER', response.data)
+
+      // Ensure socket is connected if we have a token
+      if (state.token) {
+        socketService.connect(state.token)
+      }
+
       return response
     } catch (error) {
       commit('CLEAR_AUTH')
+      socketService.disconnect()
       throw error
     }
   },
 
   logout({ commit }) {
     commit('CLEAR_AUTH')
+    socketService.disconnect()
   },
 
   initializeAuth({ commit, dispatch }) {
@@ -94,6 +107,7 @@ const actions = {
       dispatch('fetchProfile').catch((error) => {
         console.warn('Failed to fetch profile:', error.message)
         commit('CLEAR_AUTH')
+        socketService.disconnect()
       })
     }
   }

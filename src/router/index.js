@@ -4,6 +4,14 @@ import store from '../store'
 
 Vue.use(VueRouter)
 
+// Fix NavigationDuplicated error
+const originalPush = VueRouter.prototype.push
+VueRouter.prototype.push = function push(location) {
+  return originalPush.call(this, location).catch(err => {
+    if (err.name !== 'NavigationDuplicated') throw err
+  })
+}
+
 const routes = [
   {
     path: '/',
@@ -74,6 +82,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/notifications',
+    name: 'Notifications',
+    component: () => import('../views/Notifications.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/orders/:id',
     name: 'OrderDetail',
     component: () => import('../views/OrderDetail.vue'),
@@ -140,6 +154,26 @@ router.beforeEach(async (to, from, next) => {
   const finalIsAuthenticated = store.getters['auth/isAuthenticated']
   const isAdmin = store.getters['auth/isAdmin']
 
+  // Redirect admin users to admin panel when accessing normal routes
+  const normalRoutes = ['/', '/products', '/cart', '/checkout', '/account', '/addresses', '/orders']
+  if (finalIsAuthenticated && isAdmin && normalRoutes.includes(to.path)) {
+    next('/admin')
+    return
+  }
+
+  // Redirect admin to admin panel on login
+  if (to.matched.some(record => record.meta.guest)) {
+    if (finalIsAuthenticated) {
+      if (isAdmin) {
+        next('/admin')
+      } else {
+        next('/')
+      }
+      return
+    }
+  }
+
+  // Require authentication
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!finalIsAuthenticated) {
       next('/login')
@@ -147,19 +181,13 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
+  // Require admin role
   if (to.matched.some(record => record.meta.requiresAdmin)) {
     if (!finalIsAuthenticated) {
       next('/login')
       return
     }
     if (!isAdmin) {
-      next('/')
-      return
-    }
-  }
-
-  if (to.matched.some(record => record.meta.guest)) {
-    if (finalIsAuthenticated) {
       next('/')
       return
     }

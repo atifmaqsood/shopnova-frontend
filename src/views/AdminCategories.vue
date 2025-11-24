@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <AdminLayout>
     <div class="categories-content">
       <div class="page-header mb-6">
@@ -35,57 +35,115 @@
     </div>
 
     <!-- Add/Edit Category Dialog -->
-    <v-dialog v-model="showAddDialog" max-width="500px" persistent>
-      <v-card>
-        <v-card-title>
-          {{ editingCategory ? 'Edit Category' : 'Add New Category' }}
-        </v-card-title>
-        <v-card-text>
+    <v-dialog v-model="showAddDialog" max-width="600px" persistent>
+      <v-card class="premium-dialog">
+        <div class="dialog-header">
+          <div class="header-content">
+            <v-icon large color="white" class="header-icon">mdi-tag</v-icon>
+            <div>
+              <h2 class="dialog-title">{{ editingCategory ? 'Edit Category' : 'Add New Category' }}</h2>
+              <p class="dialog-subtitle">{{ editingCategory ? 'Update category information' : 'Create a new product category' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <v-card-text class="dialog-content">
           <v-form ref="form">
-            <v-text-field
-              v-model="categoryForm.name"
-              label="Category Name"
-              outlined
-              required
-            />
-            <v-textarea
-              v-model="categoryForm.description"
-              label="Description"
-              outlined
-              rows="3"
-            />
+            <div class="form-group">
+              <label class="form-label">Category Name *</label>
+              <v-text-field
+                v-model="categoryForm.name"
+                placeholder="Enter category name"
+                outlined
+                dense
+                required
+                class="modern-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <v-textarea
+                v-model="categoryForm.description"
+                placeholder="Enter category description"
+                outlined
+                rows="3"
+                dense
+                class="modern-input"
+              />
+            </div>
             
             <!-- Image Upload -->
-            <div class="mb-4">
-              <h4 class="mb-2">Category Image (Optional)</h4>
-              <v-file-input
-                v-model="selectedFile"
-                label="Select Image"
-                accept="image/*"
-                outlined
-                prepend-icon="mdi-camera"
-                show-size
-              />
-              
-              <!-- Image Preview -->
-              <div v-if="selectedFile" class="mt-4">
-                <h5 class="mb-2">Preview:</h5>
-                <v-img
-                  :src="getFilePreview(selectedFile)"
-                  height="120"
-                  width="120"
-                  contain
-                  class="category-preview"
-                />
+            <div class="form-group">
+              <label class="form-label">Category Image (Optional)</label>
+              <div class="upload-area">
+                <v-file-input
+                  v-model="selectedFile"
+                  accept="image/*"
+                  outlined
+                  dense
+                  prepend-icon=""
+                  prepend-inner-icon="mdi-camera"
+                  placeholder="Click to select or drag and drop"
+                  show-size
+                  class="modern-input upload-input"
+                >
+                  <template v-slot:selection="{ text }">
+                    <v-chip small color="primary" label>
+                      <v-icon left small>mdi-image</v-icon>
+                      {{ text }}
+                    </v-chip>
+                  </template>
+                </v-file-input>
+                
+                <!-- Image Preview -->
+                <div v-if="selectedFile || (editingCategory && editingCategory.image)" class="image-preview-container">
+                  <div class="preview-label">Preview:</div>
+                  <div class="image-preview-wrapper">
+                    <v-img
+                      :src="selectedFile ? getFilePreview(selectedFile) : getCategoryImage(editingCategory)"
+                      height="160"
+                      width="160"
+                      contain
+                      class="preview-image"
+                    >
+                      <template v-slot:placeholder>
+                        <v-row class="fill-height ma-0" align="center" justify="center">
+                          <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                        </v-row>
+                      </template>
+                    </v-img>
+                    <v-btn
+                      v-if="selectedFile"
+                      icon
+                      small
+                      color="error"
+                      class="remove-image-btn"
+                      @click="selectedFile = null"
+                    >
+                      <v-icon small>mdi-close</v-icon>
+                    </v-btn>
+                  </div>
+                </div>
               </div>
             </div>
           </v-form>
         </v-card-text>
-        <v-card-actions>
+
+        <v-card-actions class="dialog-actions">
+          <v-btn text large class="cancel-btn" @click="closeDialog">
+            <v-icon left>mdi-close</v-icon>
+            Cancel
+          </v-btn>
           <v-spacer />
-          <v-btn text @click="closeDialog">Cancel</v-btn>
-          <v-btn color="primary" :loading="saving" @click="saveCategory">
-            {{ editingCategory ? 'Update' : 'Save' }}
+          <v-btn
+            large
+            class="save-btn"
+            :loading="saving"
+            @click="saveCategory"
+          >
+            <v-icon left>{{ editingCategory ? 'mdi-check' : 'mdi-plus' }}</v-icon>
+            {{ editingCategory ? 'Update Category' : 'Create Category' }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -236,29 +294,200 @@ export default {
 
 <style scoped>
 .categories-content {
-  background: white;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
   padding: 32px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .page-title {
   font-size: 2rem;
-  font-weight: 700;
-  color: #1a1a1a;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
 }
 
 .categories-table {
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
+}
+
+/* Premium Dialog Styles */
+.premium-dialog {
+  border-radius: 24px !important;
+  overflow: hidden;
+}
+
+.dialog-header {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  padding: 32px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.dialog-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.header-icon {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.dialog-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  color: white;
+  line-height: 1.2;
+}
+
+.dialog-subtitle {
+  margin: 4px 0 0 0;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.dialog-content {
+  padding: 32px !important;
+}
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-label {
+  display: block;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.modern-input {
+  margin-top: 0 !important;
+}
+
+.modern-input >>> .v-input__control > .v-input__slot {
+  border-color: rgba(14, 165, 233, 0.2) !important;
+}
+
+.modern-input >>> .v-input__control > .v-input__slot:hover {
+  border-color: rgba(14, 165, 233, 0.4) !important;
+}
+
+.modern-input.v-input--is-focused >>> .v-input__control > .v-input__slot {
+  border-color: rgba(14, 165, 233, 0.6) !important;
+}
+
+.upload-area {
+  border: 2px dashed rgba(14, 165, 233, 0.3);
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), rgba(118, 75, 162, 0.02));
+  transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+  border-color: rgba(14, 165, 233, 0.5);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(118, 75, 162, 0.05));
+}
+
+.upload-input {
+  margin-bottom: 0;
+}
+
+.image-preview-container {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(14, 165, 233, 0.1);
+}
+
+.preview-label {
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.image-preview-wrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.preview-image {
+  border-radius: 16px;
+  border: 3px solid rgba(14, 165, 233, 0.2);
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(10px);
+}
+
+.dialog-actions {
+  padding: 20px 32px !important;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), rgba(118, 75, 162, 0.02));
+  border-top: 1px solid rgba(14, 165, 233, 0.1);
+}
+
+.cancel-btn {
+  text-transform: none;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
+  color: white !important;
+  text-transform: none;
+  font-weight: 700;
+  letter-spacing: 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
+  transition: all 0.3s ease;
+}
+
+.save-btn:hover {
+  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.5);
+  transform: translateY(-2px);
 }
 
 @media (max-width: 600px) {
@@ -267,10 +496,32 @@ export default {
     align-items: flex-start;
     gap: 16px;
   }
-}
 
-.category-preview {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  .dialog-header {
+    padding: 24px;
+  }
+
+  .header-content {
+    gap: 16px;
+  }
+
+  .dialog-title {
+    font-size: 1.5rem;
+  }
+
+  .dialog-content {
+    padding: 24px !important;
+  }
+
+  .dialog-actions {
+    padding: 16px 24px !important;
+    flex-wrap: wrap;
+  }
+
+  .cancel-btn,
+  .save-btn {
+    width: 100%;
+    margin: 4px 0 !important;
+  }
 }
 </style>

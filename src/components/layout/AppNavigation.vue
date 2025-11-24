@@ -113,8 +113,7 @@
             <template v-slot:activator="{ on, attrs }">
               <v-btn icon class="mx-1" v-bind="attrs" v-on="on">
                 <v-avatar size="32">
-                  <v-img v-if="user?.profileImage" :src="getUserImage(user.profileImage)" />
-                  <v-icon v-else>mdi-account-circle</v-icon>
+                  <v-img :src="getUserImage()" />
                 </v-avatar>
               </v-btn>
             </template>
@@ -248,17 +247,22 @@ export default {
       this.$router.push('/')
     },
     viewNotifications() {
-      this.$store.dispatch('ui/showSnackbar', {
-        message: 'Notifications page coming soon!',
-        color: 'info'
-      })
+      if (this.$route.path !== '/notifications') {
+        this.$router.push('/notifications').catch(() => {})
+      }
     },
-    getUserImage(profileImage) {
-      if (!profileImage) return ''
+    getUserImage() {
+      const profileImage = this.user?.profileImage
+      if (!profileImage) {
+        return require('@/assets/avatar2.jpg')
+      }
       if (profileImage.startsWith('/uploads/')) {
         return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${profileImage}`
       }
-      return profileImage
+      if (profileImage.startsWith('http')) {
+        return profileImage
+      }
+      return require('@/assets/avatar2.jpg')
     }
   }
 }

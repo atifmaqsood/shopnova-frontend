@@ -1,11 +1,14 @@
 <template>
   <v-app :dark="$store.getters['ui/darkMode']">
-    <template v-if="!isAdminRoute">
+    <template v-if="!isAdminRoute && !isAuthRoute">
       <AppNavigation />
       <v-main class="main-content">
         <router-view />
       </v-main>
       <Footer />
+    </template>
+    <template v-else-if="isAuthRoute">
+      <router-view />
     </template>
     <template v-else>
       <router-view />
@@ -32,6 +35,10 @@ export default {
   computed: {
     isAdminRoute() {
       return this.$route.path.startsWith('/admin')
+    },
+    isAuthRoute() {
+      const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email']
+      return authRoutes.some(route => this.$route.path.startsWith(route))
     }
   },
   async created() {

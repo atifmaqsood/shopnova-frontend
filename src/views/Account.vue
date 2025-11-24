@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="account-page">
     <!-- Header Section -->
     <section class="profile-header">
@@ -174,7 +174,7 @@
                           <span class="font-weight-medium">
                             {{ order.items?.length || 0 }} item(s)
                           </span>
-                          <span class="mx-2">•</span>
+                          <span class="mx-2">â€¢</span>
                           <span class="text-h6 primary--text font-weight-bold">
                             ${{ order.total.toFixed(2) }}
                           </span>
@@ -322,7 +322,7 @@ export default {
         }
         return this.user.profileImage
       }
-      return `https://ui-avatars.com/api/?name=${encodeURIComponent(this.user?.name || 'User')}&size=120&background=1976d2&color=fff`
+      return require('@/assets/avatar2.jpg')
     }
   },
   async created() {
@@ -357,11 +357,9 @@ export default {
       })
     },
     viewNotifications() {
-      // Navigate to notifications page when implemented
-      this.$store.dispatch('ui/showSnackbar', {
-        message: 'Notifications page coming soon!',
-        color: 'info'
-      })
+      if (this.$route.path !== '/notifications') {
+        this.$router.push('/notifications').catch(() => {})
+      }
     },
     getStatusColor(status) {
       const colors = {
@@ -471,7 +469,7 @@ export default {
 }
 
 .profile-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
   color: white;
   padding: 60px 0;
   margin-bottom: 0;

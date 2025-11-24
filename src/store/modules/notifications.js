@@ -39,6 +39,14 @@ const mutations = {
       notification.isRead = true
       state.unreadCount = Math.max(0, state.unreadCount - 1)
     }
+  },
+  ADD_NOTIFICATION(state, notification) {
+    // Add new notification to the beginning of the list
+    state.notifications.unshift(notification)
+    // Increment unread count if notification is unread
+    if (!notification.isRead) {
+      state.unreadCount += 1
+    }
   }
 }
 
@@ -75,6 +83,10 @@ const actions = {
     await notificationService.markAllAsRead()
     commit('SET_UNREAD_COUNT', 0)
     dispatch('fetchNotifications')
+  },
+
+  addNotification({ commit }, notification) {
+    commit('ADD_NOTIFICATION', notification)
   }
 }
 
