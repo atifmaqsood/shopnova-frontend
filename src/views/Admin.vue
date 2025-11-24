@@ -4,7 +4,7 @@
       <!-- Welcome Header -->
       <div class="welcome-header">
         <div>
-          <h1 class="dashboard-title">Welcome back, {{ user?.name || 'Admin' }}! ðŸ‘‹</h1>
+          <h1 class="dashboard-title">Welcome back, {{ user?.name || 'Admin' }}! 👋</h1>
           <p class="dashboard-subtitle">Here's what's happening with your store today</p>
         </div>
         <div class="quick-actions">

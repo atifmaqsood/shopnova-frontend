@@ -157,7 +157,9 @@ export default {
         })
         
         // Remove token from URL
-        this.$router.replace('/')
+        const isAdmin = this.$store.getters['auth/isAdmin']
+        const target = isAdmin ? '/admin' : '/'
+        this.$router.replace(target).catch(() => {})
       } catch (error) {
         console.error('Google login error:', error)
         this.$store.dispatch('ui/showSnackbar', {
@@ -176,7 +178,10 @@ export default {
           message: 'Login successful!',
           color: 'success'
         })
-        this.$router.push('/')
+        
+        const isAdmin = this.$store.getters['auth/isAdmin']
+        const target = isAdmin ? '/admin' : '/'
+        this.$router.push(target).catch(() => {})
       } catch (error) {
         this.$store.dispatch('ui/showSnackbar', {
           message: error.response?.data?.message || 'Login failed',

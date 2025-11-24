@@ -27,7 +27,7 @@
           </div>
 
           <!-- Step 1: Shipping Address -->
-          <div v-if="step === 1" class="step-content">
+          <div v-show="step === 1" class="step-content">
             <div class="step-title-wrapper">
               <v-icon color="#0ea5e9" class="mr-2">mdi-map-marker</v-icon>
               <h2 class="step-title">Shipping Address</h2>
@@ -84,7 +84,7 @@
           </div>
 
           <!-- Step 2: Payment Method -->
-          <div v-if="step === 2" class="step-content">
+          <div v-show="step === 2" class="step-content">
             <div class="step-title-wrapper">
               <v-icon color="#0ea5e9" class="mr-2">mdi-credit-card</v-icon>
               <h2 class="step-title">Payment Method</h2>
@@ -94,7 +94,7 @@
               <div
                 class="payment-card"
                 :class="{ selected: paymentMethod === 'cash' }"
-                @click="paymentMethod = 'cash'"
+                @click="selectPaymentMethod('cash')"
               >
                 <v-radio
                   value="cash"
@@ -112,21 +112,29 @@
               </div>
 
               <div
-                class="payment-card disabled"
+                class="payment-card"
+                :class="{ selected: paymentMethod === 'card' }"
+                @click="selectPaymentMethod('card')"
               >
                 <v-radio
                   value="card"
-                  disabled
+                  :input-value="paymentMethod"
                   color="primary"
                   class="payment-radio"
                 />
                 <div class="payment-content">
-                  <v-icon size="40" color="#cbd5e1">mdi-credit-card</v-icon>
+                  <v-icon size="40" color="#0ea5e9">mdi-credit-card</v-icon>
                   <div class="payment-details">
                     <h3 class="payment-name">Credit/Debit Card</h3>
-                    <p class="payment-desc">Coming Soon</p>
+                    <p class="payment-desc">Pay securely with Stripe</p>
                   </div>
                 </div>
+              </div>
+              
+              <!-- Stripe Element Container -->
+              <div v-show="paymentMethod === 'card'" class="stripe-element-container mt-4 pa-4">
+                <div id="card-element"></div>
+                <div id="card-errors" role="alert" class="error--text mt-2"></div>
               </div>
             </div>
 
@@ -148,13 +156,23 @@
           </div>
 
           <!-- Step 3: Review Order -->
-          <div v-if="step === 3" class="step-content">
+          <div v-show="step === 3" class="step-content">
             <div class="step-title-wrapper">
               <v-icon color="#0ea5e9" class="mr-2">mdi-clipboard-check</v-icon>
               <h2 class="step-title">Review Your Order</h2>
             </div>
 
             <div class="review-section">
+              <h3 class="review-subtitle">Payment Method</h3>
+              <div class="d-flex align-center mb-6">
+                <v-icon color="#0ea5e9" class="mr-2">
+                  {{ paymentMethod === 'card' ? 'mdi-credit-card' : 'mdi-cash' }}
+                </v-icon>
+                <span class="text-body-1 font-weight-medium">
+                  {{ paymentMethod === 'card' ? 'Credit/Debit Card' : 'Cash on Delivery' }}
+                </span>
+              </div>
+
               <h3 class="review-subtitle">Order Items</h3>
               <div v-for="item in items" :key="item.id" class="review-item">
                 <div class="review-item-name">
@@ -256,6 +274,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import { loadStripe } from '@stripe/stripe-js'
 
 export default {
   name: 'Checkout',
@@ -265,7 +284,11 @@ export default {
       steps: ['Shipping', 'Payment', 'Review'],
       selectedAddress: null,
       paymentMethod: 'cash',
-      placing: false
+      placing: false,
+      stripe: null,
+      elements: null,
+      card: null,
+      stripeKey: process.env.VUE_APP_STRIPE_PUBLISHABLE_KEY
     }
   },
   computed: {
@@ -291,8 +314,55 @@ export default {
     if (this.items.length === 0) {
       this.$router.push('/cart')
     }
+    
+    // Initialize Stripe
+    this.stripe = await loadStripe(this.stripeKey)
   },
   methods: {
+    async selectPaymentMethod(method) {
+      this.paymentMethod = method
+      
+      if (method === 'card') {
+        this.$nextTick(() => {
+          this.mountStripeElement()
+        })
+      }
+    },
+    mountStripeElement() {
+      if (this.card) return // Already mounted
+      
+      if (!this.stripe) return
+      
+      this.elements = this.stripe.elements()
+      this.card = this.elements.create('card', {
+        style: {
+          base: {
+            color: '#32325d',
+            fontFamily: '"Inter", sans-serif',
+            fontSmoothing: 'antialiased',
+            fontSize: '16px',
+            '::placeholder': {
+              color: '#aab7c4'
+            }
+          },
+          invalid: {
+            color: '#fa755a',
+            iconColor: '#fa755a'
+          }
+        }
+      })
+      
+      this.card.mount('#card-element')
+      
+      this.card.on('change', ({error}) => {
+        const displayError = document.getElementById('card-errors')
+        if (error) {
+          displayError.textContent = error.message
+        } else {
+          displayError.textContent = ''
+        }
+      })
+    },
     async placeOrder() {
       this.placing = true
       try {
@@ -300,9 +370,49 @@ export default {
         const shippingAddress = selectedAddr ? 
           `${selectedAddr.street}, ${selectedAddr.city}, ${selectedAddr.state} ${selectedAddr.zipCode}, ${selectedAddr.country}` : ''
         
+        let paymentIntentId = null
+        
+        // Handle Stripe Payment
+        if (this.paymentMethod === 'card') {
+          // 1. Create Payment Intent on Backend
+          const response = await this.$http.post('/payment/create-payment-intent', {
+            amount: this.total
+          })
+          
+          const clientSecret = response.data.clientSecret
+          
+          // 2. Confirm Card Payment
+          const result = await this.stripe.confirmCardPayment(clientSecret, {
+            payment_method: {
+              card: this.card,
+              billing_details: {
+                name: selectedAddr?.name || 'Customer', // Ideally get name from address or user profile
+                address: {
+                  line1: selectedAddr?.street,
+                  city: selectedAddr?.city,
+                  state: selectedAddr?.state,
+                  postal_code: selectedAddr?.zipCode,
+                  country: 'US' // Should map country code properly
+                }
+              }
+            }
+          })
+          
+          if (result.error) {
+            throw new Error(result.error.message)
+          }
+          
+          if (result.paymentIntent.status === 'succeeded') {
+            paymentIntentId = result.paymentIntent.id
+          } else {
+            throw new Error('Payment failed')
+          }
+        }
+        
         const orderData = {
           shippingAddress,
-          paymentMethod: this.paymentMethod
+          paymentMethod: this.paymentMethod,
+          paymentIntentId // Pass this to backend to link order with payment
         }
         
         await this.$store.dispatch('orders/createOrder', orderData)
@@ -314,8 +424,9 @@ export default {
         
         this.$router.push('/account')
       } catch (error) {
+        console.error('Order placement error:', error)
         this.$store.dispatch('ui/showSnackbar', {
-          message: error.response?.data?.message || 'Failed to place order',
+          message: error.message || error.response?.data?.message || 'Failed to place order',
           color: 'error'
         })
       } finally {
@@ -835,5 +946,34 @@ export default {
     position: relative;
     top: 0;
   }
+}
+
+/* Stripe Element */
+#card-element {
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s ease;
+  margin-bottom: 8px;
+}
+
+#card-element:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+#card-element.StripeElement--focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+  background: white;
+}
+
+#card-errors {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 </style>
