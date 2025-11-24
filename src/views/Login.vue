@@ -89,9 +89,20 @@
             <!-- Divider -->
             <div class="divider-section">
               <div class="divider-line"></div>
-              <span class="divider-text">or</span>
+              <span class="divider-text">or continue with</span>
               <div class="divider-line"></div>
             </div>
+
+            <!-- Google Login -->
+            <v-btn
+              class="google-btn mb-6"
+              large
+              block
+              @click="loginWithGoogle"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="google-icon mr-3" />
+              Sign in with Google
+            </v-btn>
 
             <!-- Register Link -->
             <div class="register-section">
@@ -120,7 +131,43 @@ export default {
       loading: false
     }
   },
+  mounted() {
+    const token = this.$route.query.token
+    if (token) {
+      this.handleGoogleCallback(token)
+    }
+  },
   methods: {
+    loginWithGoogle() {
+      window.location.href = `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}/auth/google`
+    },
+    async handleGoogleCallback(token) {
+      this.loading = true
+      try {
+        this.$store.commit('auth/SET_TOKEN', token)
+        await this.$store.dispatch('auth/fetchProfile')
+        
+        // Initialize other data
+        await this.$store.dispatch('cart/fetchCart')
+        await this.$store.dispatch('notifications/fetchUnreadCount')
+        
+        this.$store.dispatch('ui/showSnackbar', {
+          message: 'Login successful!',
+          color: 'success'
+        })
+        
+        // Remove token from URL
+        this.$router.replace('/')
+      } catch (error) {
+        console.error('Google login error:', error)
+        this.$store.dispatch('ui/showSnackbar', {
+          message: 'Google login failed',
+          color: 'error'
+        })
+      } finally {
+        this.loading = false
+      }
+    },
     async login() {
       this.loading = true
       try {
@@ -511,5 +558,32 @@ export default {
   .brand-icon {
     font-size: 48px !important;
   }
+}
+
+.google-btn {
+  background: white !important;
+  color: #334155 !important;
+  text-transform: none;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  height: 56px !important;
+  animation: fadeIn 1s ease-out 1s both;
+}
+
+.google-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.google-icon {
+  width: 24px;
+  height: 24px;
 }
 </style>

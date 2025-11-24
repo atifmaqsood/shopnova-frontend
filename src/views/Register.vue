@@ -195,9 +195,20 @@
             <!-- Divider -->
             <div class="divider-section">
               <div class="divider-line"></div>
-              <span class="divider-text">or</span>
+              <span class="divider-text">or sign up with</span>
               <div class="divider-line"></div>
             </div>
+
+            <!-- Google Login -->
+            <v-btn
+              class="google-btn mb-6"
+              large
+              block
+              @click="loginWithGoogle"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="google-icon mr-3" />
+              Sign up with Google
+            </v-btn>
 
             <!-- Login Link -->
             <div class="login-section">
@@ -243,6 +254,9 @@ export default {
         }
         reader.readAsDataURL(file)
       }
+    },
+    loginWithGoogle() {
+      window.location.href = `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}/auth/google`
     },
     async register() {
       this.loading = true
@@ -636,6 +650,33 @@ export default {
 
 .login-link:hover {
   color: #06b6d4;
+}
+
+.google-btn {
+  background: white !important;
+  color: #334155 !important;
+  text-transform: none;
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  height: 56px !important;
+  animation: fadeIn 1s ease-out 1s both;
+}
+
+.google-btn:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.google-icon {
+  width: 24px;
+  height: 24px;
 }
 
 @media (max-width: 600px) {
