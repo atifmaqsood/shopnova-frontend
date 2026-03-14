@@ -1,102 +1,196 @@
-﻿<template>
+<template>
   <v-app class="admin-app">
-    <!-- Modern Admin Navbar -->
-    <v-app-bar app color="white" flat height="72" class="admin-navbar" elevation="0">
-      <v-app-bar-nav-icon @click="drawer = !drawer" class="d-lg-none" />
-      
-      <v-toolbar-title class="admin-title">
-        <div class="logo-container">
-          <v-icon size="32" class="logo-icon">mdi-shield-crown</v-icon>
-          <span class="logo-text">ShopNova Admin</span>
-        </div>
-      </v-toolbar-title>
-
-      <v-spacer />
-
-      <!-- Search Bar -->
-      <v-text-field
-        placeholder="Search..."
-        prepend-inner-icon="mdi-magnify"
-        outlined
-        dense
-        hide-details
-        class="search-field d-none d-md-flex mr-4"
-        style="max-width: 300px;"
-      />
-
-      <!-- Notifications -->
-      <v-btn icon class="mr-2">
-        <v-badge color="error" dot>
-          <v-icon>mdi-bell-outline</v-icon>
-        </v-badge>
-      </v-btn>
-
-      <!-- Admin User Menu -->
-      <v-menu offset-y left transition="slide-y-transition" nudge-bottom="10">
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn text v-bind="attrs" v-on="on" class="user-menu-btn">
-            <v-avatar size="36" color="gradient-primary" class="mr-2">
-              <span class="white--text font-weight-bold">{{ (user?.name || 'A')[0].toUpperCase() }}</span>
-            </v-avatar>
-            <span class="d-none d-sm-inline user-name">{{ user?.name || 'Admin' }}</span>
-            <v-icon right small>mdi-chevron-down</v-icon>
-          </v-btn>
-        </template>
-        <v-card class="user-menu-card" min-width="260" elevation="8">
-          <v-list class="py-0">
-            <v-list-item class="user-info-section">
-              <v-list-item-avatar size="48" color="gradient-primary">
-                <span class="white--text text-h6">{{ (user?.name || 'A')[0].toUpperCase() }}</span>
-              </v-list-item-avatar>
-              <v-list-item-content>
-                <v-list-item-title class="font-weight-bold">{{ user?.name || 'Admin' }}</v-list-item-title>
-                <v-list-item-subtitle class="text-caption">{{ user?.email }}</v-list-item-subtitle>
-              </v-list-item-content>
-            </v-list-item>
-            <v-divider />
-            <v-list-item @click="logout" class="logout-item">
-              <v-list-item-icon>
-                <v-icon color="error">mdi-logout</v-icon>
-              </v-list-item-icon>
-              <v-list-item-title class="error--text font-weight-medium">Logout</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-      </v-menu>
-    </v-app-bar>
-
-    <!-- Modern Admin Sidebar -->
+    <!-- Mobile Sidebar Drawer -->
     <v-navigation-drawer
       v-model="drawer"
       app
-      permanent
+      temporary
       width="280"
       class="admin-sidebar"
+      color="#f8fafc"
     >
-      <div class="sidebar-content">
-        <v-list nav class="admin-nav pt-6">
+      <div class="sidebar-header pa-6">
+        <div class="logo-group">
+          <div class="logo-sq">
+            <v-icon color="white">mdi-shield-crown</v-icon>
+          </div>
+          <div class="ml-3">
+            <div class="logo-text-admin">Nova<span class="primary--text">Admin</span></div>
+            <div class="logo-subtext">PLATFORM VERSION 2.0</div>
+          </div>
+        </div>
+      </div>
+
+      <v-list nav class="px-4">
+        <v-list-item-group v-model="activeMenu" color="primary">
+          <div v-for="(group, gIdx) in menuGroups" :key="gIdx" class="mb-6">
+            <div class="px-4 mb-2 text-caption font-weight-black grey--text text-uppercase letter-spacing-2">
+              {{ group.title }}
+            </div>
+            
+            <v-list-item
+              v-for="item in group.items"
+              :key="item.name"
+              :to="item.to"
+              exact
+              class="nav-item mb-1"
+            >
+              <v-list-item-icon class="mr-4">
+                <v-icon size="20">{{ item.icon }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title class="nav-title">{{ item.title }}</v-list-item-title>
+              </v-list-item-content>
+            </v-list-item>
+          </div>
+        </v-list-item-group>
+      </v-list>
+
+      <template v-slot:append>
+        <div class="pa-4">
+          <v-card flat class="user-card-mini rounded-xl pa-3 bg-white border">
+            <div class="d-flex align-center">
+              <v-avatar size="40" class="gradient-primary mr-3">
+                <span class="white--text font-weight-bold text-subtitle-1">{{ (user?.name || 'A')[0].toUpperCase() }}</span>
+              </v-avatar>
+              <div class="overflow-hidden">
+                <div class="text-subtitle-2 font-weight-black text-truncate">{{ user?.name || 'Admin' }}</div>
+                <div class="text-caption grey--text text-truncate">System Administrator</div>
+              </div>
+              <v-spacer />
+              <v-btn icon x-small @click="logout" color="error">
+                <v-icon small>mdi-logout</v-icon>
+              </v-btn>
+            </div>
+          </v-card>
+        </div>
+      </template>
+    </v-navigation-drawer>
+
+    <!-- Desktop Sidebar (Permanent) -->
+    <v-navigation-drawer
+      app
+      permanent
+      width="280"
+      class="admin-sidebar d-none d-lg-block border-right"
+      floating
+    >
+      <div class="sidebar-header pa-8">
+        <div class="logo-group">
+          <div class="logo-sq pulse-glow">
+            <v-icon color="white">mdi-shield-crown</v-icon>
+          </div>
+          <div class="ml-4">
+            <div class="logo-text-admin">Nova<span class="primary--text">Admin</span></div>
+            <div class="logo-subtext">CONTROL CENTER</div>
+          </div>
+        </div>
+      </div>
+
+      <v-list nav class="px-6">
+        <div v-for="(group, gIdx) in menuGroups" :key="gIdx" class="mb-8">
+          <div class="px-4 mb-3 text-caption font-weight-black grey--text text-uppercase letter-spacing-2" style="font-size: 0.7rem !important;">
+            {{ group.title }}
+          </div>
+          
           <v-list-item
-            v-for="item in adminMenuItems"
+            v-for="item in group.items"
             :key="item.name"
             :to="item.to"
             exact
-            class="nav-item"
+            class="nav-item mb-2"
           >
-            <v-list-item-icon>
-              <v-icon :color="item.color || 'primary'">{{ item.icon }}</v-icon>
+            <v-list-item-icon class="mr-4">
+              <v-icon size="20">{{ item.icon }}</v-icon>
             </v-list-item-icon>
             <v-list-item-content>
               <v-list-item-title class="nav-title">{{ item.title }}</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
-        </v-list>
-      </div>
+        </div>
+      </v-list>
+
+      <template v-slot:append>
+        <div class="pa-6">
+          <v-card flat class="user-card-mini rounded-xl pa-4 bg-white border-light soft-shadow">
+            <div class="d-flex align-center">
+              <v-avatar size="44" class="gradient-primary mr-3 elevation-4">
+                <span class="white--text font-weight-bold">{{ (user?.name || 'A')[0].toUpperCase() }}</span>
+              </v-avatar>
+              <div class="overflow-hidden">
+                <div class="text-subtitle-1 font-weight-black text-truncate" style="line-height: 1.2">{{ user?.name || 'Admin' }}</div>
+                <div class="text-caption grey--text text-truncate">Power User</div>
+              </div>
+              <v-spacer />
+              <v-menu top left offset-y offset-x>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn icon v-bind="attrs" v-on="on" small color="grey darken-1">
+                    <v-icon small>mdi-dots-vertical</v-icon>
+                  </v-btn>
+                </template>
+                <v-list dense class="rounded-lg pa-2">
+                  <v-list-item @click="logout" class="rounded-md">
+                    <v-list-item-icon class="mr-2"><v-icon small color="error">mdi-logout</v-icon></v-list-item-icon>
+                    <v-list-item-title class="error--text font-weight-bold">Logout</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </div>
+          </v-card>
+        </div>
+      </template>
     </v-navigation-drawer>
 
-    <!-- Modern Admin Main Content -->
-    <v-main class="admin-main">
-      <div class="admin-content">
-        <slot />
+    <!-- Header Tools (Mobile Only) -->
+    <v-app-bar 
+      app 
+      flat 
+      color="white" 
+      class="d-lg-none border-bottom"
+      height="72"
+    >
+      <v-btn icon @click="drawer = !drawer">
+        <v-icon>mdi-menu</v-icon>
+      </v-btn>
+      <v-toolbar-title class="font-weight-black">NovaAdmin</v-toolbar-title>
+      <v-spacer />
+      <v-btn icon>
+        <v-icon>mdi-bell-outline</v-icon>
+      </v-btn>
+    </v-app-bar>
+
+    <!-- Main Content Area -->
+    <v-main class="admin-main-bg">
+      <div class="admin-page-container">
+        <!-- Top Tool Bar (Desktop) -->
+        <div class="desktop-top-bar d-none d-lg-flex align-center justify-end mb-8 px-8 pt-4">
+          <div class="meta-info d-flex align-center mr-auto">
+            <v-chip outlined small class="mr-4 px-3 font-weight-bold">
+              <v-icon left x-small color="success">mdi-circle</v-icon>
+              Server: Healthy
+            </v-chip>
+            <div class="text-caption grey--text font-weight-medium d-flex align-center">
+              <v-icon x-small class="mr-1">mdi-clock-outline</v-icon>
+              Last synced: Just now
+            </div>
+          </div>
+          
+          <v-btn icon class="mr-2 grey--text text--darken-1">
+            <v-icon>mdi-magnify</v-icon>
+          </v-btn>
+          <v-btn icon class="mr-2 grey--text text--darken-1">
+            <v-badge color="error" dot overlap>
+              <v-icon>mdi-bell-outline</v-icon>
+            </v-badge>
+          </v-btn>
+          <v-btn text class="rounded-pill px-4 grey--text text--darken-2 font-weight-bold" @click="$router.push('/')">
+            Storefront <v-icon right size="18">mdi-launch</v-icon>
+          </v-btn>
+        </div>
+
+        <div class="page-content px-4 px-lg-8 pb-12">
+          <slot />
+        </div>
       </div>
     </v-main>
   </v-app>
@@ -109,42 +203,29 @@ export default {
   name: 'AdminLayout',
   data() {
     return {
-      drawer: true,
-      adminMenuItems: [
+      drawer: false,
+      activeMenu: 0,
+      menuGroups: [
         {
-          name: 'dashboard',
-          title: 'Dashboard',
-          icon: 'mdi-view-dashboard',
-          to: '/admin',
-          color: '#0ea5e9'
+          title: 'Management',
+          items: [
+            { name: 'dashboard', title: 'Analytics', icon: 'mdi-view-dashboard-outline', to: '/admin' },
+            { name: 'orders', title: 'Sales & Orders', icon: 'mdi-clipboard-text-outline', to: '/admin/orders' },
+            { name: 'users', title: 'Customer List', icon: 'mdi-account-group-outline', to: '/admin/users' }
+          ]
         },
         {
-          name: 'products',
-          title: 'Products',
-          icon: 'mdi-package-variant',
-          to: '/admin/products',
-          color: '#f093fb'
+          title: 'Catalog',
+          items: [
+            { name: 'products', title: 'Inventory', icon: 'mdi-package-variant-closed', to: '/admin/products' },
+            { name: 'categories', title: 'Collection Tags', icon: 'mdi-tag-outline', to: '/admin/categories' }
+          ]
         },
         {
-          name: 'categories',
-          title: 'Categories',
-          icon: 'mdi-tag',
-          to: '/admin/categories',
-          color: '#4facfe'
-        },
-        {
-          name: 'orders',
-          title: 'Orders',
-          icon: 'mdi-clipboard-list',
-          to: '/admin/orders',
-          color: '#43e97b'
-        },
-        {
-          name: 'users',
-          title: 'Users',
-          icon: 'mdi-account-group',
-          to: '/admin/users',
-          color: '#fa709a'
+          title: 'Config',
+          items: [
+            { name: 'settings', title: 'Domain Settings', icon: 'mdi-cog-outline', to: '/admin/settings' }
+          ]
         }
       ]
     }
@@ -164,222 +245,136 @@ export default {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-* {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 .admin-app {
-  background: #f5f7fa;
-  position: relative;
-}
-
-.v-app-bar {
-  z-index: 6 !important;
-}
-
-.admin-navbar {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(14, 165, 233, 0.1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05) !important;
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.page-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.logo-icon {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.logo-text {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 1.25rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.search-field {
-  border-radius: 12px;
-}
-
-.user-menu-btn {
-  text-transform: none;
-  border-radius: 50px;
-  padding: 4px 12px 4px 4px !important;
-  transition: all 0.3s ease;
-}
-
-.user-menu-btn:hover {
-  background: rgba(14, 165, 233, 0.08);
-}
-
-.user-name {
-  font-weight: 600;
-  color: #2d3748;
-  margin: 0 4px;
-}
-
-.user-menu-card {
-  border-radius: 16px !important;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.user-info-section {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  padding: 16px !important;
-  min-height: 80px;
-}
-
-.user-info-section .v-list-item__title,
-.user-info-section .v-list-item__subtitle {
-  color: white !important;
-}
-
-.logout-item {
-  transition: all 0.3s ease;
-  min-height: 48px;
-}
-
-.logout-item:hover {
-  background: rgba(244, 67, 54, 0.05);
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  background-color: #f1f5f9 !important;
 }
 
 .admin-sidebar {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(14, 165, 233, 0.1);
-  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.05);
+  border-right: 1px solid rgba(0,0,0,0.05) !important;
 }
 
-.sidebar-content {
-  height: 100%;
-  position: relative;
+.sidebar-header {
+  padding-bottom: 20px;
 }
 
-.admin-nav {
-  padding: 0 16px;
+.logo-group {
+  display: flex;
+  align-items: center;
+}
+
+.logo-sq {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.pulse-glow {
+  animation: logo-glow 3s infinite;
+}
+
+@keyframes logo-glow {
+  0%, 100% { box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3); }
+  50% { box-shadow: 0 8px 24px rgba(14, 165, 233, 0.5); }
+}
+
+.logo-text-admin {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.logo-subtext {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 1.5px;
+  margin-top: 4px;
 }
 
 .nav-item {
-  border-radius: 16px;
-  margin-bottom: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.nav-item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 4px;
-  height: 0;
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  border-radius: 0 4px 4px 0;
-  transition: height 0.3s ease;
-  opacity: 0;
+  border-radius: 12px !important;
+  transition: all 0.3s ease;
+  color: #64748b !important;
 }
 
 .nav-item:hover {
+  background-color: white !important;
+  color: #0ea5e9 !important;
   transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
-}
-
-.nav-item:hover::before {
-  opacity: 0.08;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02) !important;
 }
 
 .nav-item.v-list-item--active {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
-  transform: translateX(4px);
-}
-
-.nav-item.v-list-item--active .v-list-item__icon {
-  margin-right: 16px !important;
-  transition: transform 0.3s ease;
-}
-
-.nav-item:hover .v-list-item__icon,
-.nav-item.v-list-item--active .v-list-item__icon {
-  transform: scale(1.1) rotate(5deg);
+  background: white !important;
+  color: #0ea5e9 !important;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.02) !important;
 }
 
 .nav-item.v-list-item--active .v-icon {
-  color: white !important;
+  color: #0ea5e9 !important;
 }
 
 .nav-title {
-  font-weight: 600;
   font-size: 0.95rem;
-  letter-spacing: -0.2px;
+  font-weight: 600;
 }
 
-.nav-item.v-list-item--active .nav-title {
-  font-weight: 700;
-  color: white !important;
+.letter-spacing-2 {
+  letter-spacing: 2px;
 }
 
-.admin-main {
-  background: transparent;
-  position: relative;
-  z-index: 1;
+.user-card-mini {
+  border: 1px solid rgba(0,0,0,0.05) !important;
+  background: white !important;
 }
 
-.admin-content {
-  padding: 32px;
-  min-height: calc(100vh - 72px);
+.border-right {
+  border-right: 1px solid rgba(0,0,0,0.06) !important;
 }
 
-@media (max-width: 960px) {
-  .admin-sidebar {
-    width: 260px !important;
-  }
-  
-  .admin-content {
-    padding: 20px;
-  }
+.border-bottom {
+  border-bottom: 1px solid rgba(0,0,0,0.06) !important;
 }
 
-@media (max-width: 600px) {
-  .admin-content {
-    padding: 16px;
-  }
+.soft-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05) !important;
 }
 
-/* Gradient color class */
 .gradient-primary {
   background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
+}
+
+.admin-main-bg {
+  background-color: #f1f5f9;
+}
+
+.admin-page-container {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.05);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.1);
 }
 </style>

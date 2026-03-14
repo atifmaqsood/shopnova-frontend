@@ -1,196 +1,258 @@
-﻿<template>
+<template>
   <AdminLayout>
-    <div class="users-content">
-      <div class="page-header mb-6">
-        <h1 class="page-title">User Management</h1>
-        <v-select
-          v-model="roleFilter"
-          :items="roleOptions"
-          label="Filter by Role"
-          outlined
-          dense
-          clearable
-          style="max-width: 200px;"
-          @change="fetchUsers"
-        />
+    <div class="admin-users-view">
+      <!-- Premium Page Header -->
+      <div class="page-header mb-10">
+        <v-row align="end" no-gutters>
+          <v-col cols="12" md="6">
+            <div class="d-flex align-center mb-2">
+              <v-btn icon color="primary" @click="$router.go(-1)" class="mr-2">
+                <v-icon>mdi-arrow-left</v-icon>
+              </v-btn>
+              <span class="text-overline font-weight-black primary--text letter-spacing-2">ACCESS MANAGEMENT</span>
+            </div>
+            <h1 class="text-h3 font-weight-black mb-2">Customer Base</h1>
+            <p class="grey--text text-subtitle-1 mb-0">Manage platform users, coordinate roles, and monitor engagement metrics.</p>
+          </v-col>
+          <v-col cols="12" md="6" class="text-md-right mt-6 mt-md-0">
+            <div class="d-flex align-center justify-md-end gap-3">
+              <v-btn outlined color="primary" rounded class="px-6 font-weight-bold" @click="fetchUsers">
+                <v-icon left>mdi-refresh</v-icon> Sync Directory
+              </v-btn>
+              <v-btn color="primary" x-large rounded elevation="8" class="px-8 font-weight-black">
+                <v-icon left size="24">mdi-account-plus-outline</v-icon> Add Operator
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
       </div>
 
-      <v-card class="users-table">
+      <!-- Filters & Active Sessions Stats -->
+      <v-row class="mb-8">
+        <v-col cols="12" lg="8">
+          <v-card class="rounded-xl border-light pa-4 soft-shadow bg-white d-flex align-center">
+            <v-text-field
+              v-model="search"
+              placeholder="Search by name, email, or verified status..."
+              prepend-inner-icon="mdi-magnify"
+              outlined
+              dense
+              hide-details
+              class="rounded-lg flex-grow-1 mr-4"
+            />
+            <v-select
+              v-model="roleFilter"
+              :items="roleOptions"
+              placeholder="Filter Role"
+              outlined
+              dense
+              hide-details
+              clearable
+              style="max-width: 180px;"
+              class="rounded-lg mr-4"
+              @change="fetchUsers"
+            />
+            <v-btn icon color="primary" class="bg-primary-light">
+              <v-icon>mdi-tune-variant</v-icon>
+            </v-btn>
+          </v-card>
+        </v-col>
+        <v-col cols="12" lg="4">
+          <v-card class="rounded-xl border-light pa-4 soft-shadow bg-white d-flex align-center h-100">
+            <div class="px-4 border-right">
+              <div class="text-h4 font-weight-black primary--text">{{ users.length }}</div>
+              <div class="text-caption font-weight-bold grey--text text-uppercase">Total Profiles</div>
+            </div>
+            <div class="px-4">
+              <div class="text-h4 font-weight-black success--text">{{ users.filter(u => u.isVerified).length }}</div>
+              <div class="text-caption font-weight-bold grey--text text-uppercase">Verified</div>
+            </div>
+            <v-spacer />
+            <v-avatar color="primary lighten-5" size="48">
+              <v-icon color="primary">mdi-shield-account-outline</v-icon>
+            </v-avatar>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Users Data Table -->
+      <v-card class="rounded-xl border-light soft-shadow overflow-hidden">
         <v-data-table
           :headers="headers"
           :items="users"
           :loading="loading"
-          class="elevation-0"
+          :search="search"
+          :items-per-page="10"
+          class="bg-white premium-table"
         >
-          <template slot="item.avatar" slot-scope="{ item }">
-            <v-avatar size="40" color="primary">
-              <v-img v-if="item.profileImage" :src="getUserImage(item)" />
-              <span v-else class="white--text">{{ item.name.charAt(0).toUpperCase() }}</span>
-            </v-avatar>
+          <!-- User Profile Column -->
+          <template slot="item.name" slot-scope="{ item }">
+            <div class="d-flex align-center py-3">
+              <v-avatar size="44" :class="item.role === 'ADMIN' ? 'gradient-coral shadow-sm' : 'gradient-primary shadow-sm'" class="mr-4">
+                <v-img v-if="item.profileImage" :src="getUserImage(item)" />
+                <span v-else class="white--text font-weight-black">{{ item.name.charAt(0).toUpperCase() }}</span>
+              </v-avatar>
+              <div>
+                <div class="font-weight-black text-body-1">{{ item.name }}</div>
+                <div class="text-caption grey--text">{{ item.email }}</div>
+              </div>
+            </div>
           </template>
+
+          <!-- Role Column -->
           <template slot="item.role" slot-scope="{ item }">
             <v-chip
+              :color="item.role === 'ADMIN' ? 'error' : 'primary'"
               small
-              :color="item.role === 'ADMIN' ? 'red' : 'primary'"
-              text-color="white"
+              label
+              outlined
+              class="font-weight-black px-3"
             >
+              <v-icon left x-small>{{ item.role === 'ADMIN' ? 'mdi-crown-outline' : 'mdi-account-outline' }}</v-icon>
               {{ item.role }}
             </v-chip>
           </template>
+
+          <!-- Status Column -->
           <template slot="item.isVerified" slot-scope="{ item }">
-            <v-icon :color="item.isVerified ? 'green' : 'red'">
-              {{ item.isVerified ? 'mdi-check-circle' : 'mdi-close-circle' }}
-            </v-icon>
-          </template>
-          <template slot="item.createdAt" slot-scope="{ item }">
-            {{ formatDate(item.createdAt) }}
-          </template>
-          <template slot="item.actions" slot-scope="{ item }">
-            <v-btn icon small @click="viewUser(item)">
-              <v-icon>mdi-eye</v-icon>
-            </v-btn>
-            <v-menu offset-y>
+            <v-tooltip top>
               <template v-slot:activator="{ on, attrs }">
-                <v-btn icon small v-bind="attrs" v-on="on">
-                  <v-icon>mdi-dots-vertical</v-icon>
-                </v-btn>
+                <v-icon v-bind="attrs" v-on="on" :color="item.isVerified ? 'success' : 'grey lighten-1'">
+                  {{ item.isVerified ? 'mdi-check-decagram' : 'mdi-decagram-outline' }}
+                </v-icon>
               </template>
-              <v-list>
-                <v-list-item @click="toggleUserRole(item)" v-if="item.role !== 'ADMIN'">
-                  <v-list-item-title>Make Admin</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="toggleUserRole(item)" v-else>
-                  <v-list-item-title>Remove Admin</v-list-item-title>
-                </v-list-item>
-              </v-list>
-            </v-menu>
+              <span>{{ item.isVerified ? 'Identity Verified' : 'Pending Verification' }}</span>
+            </v-tooltip>
+          </template>
+
+          <!-- Joined Column -->
+          <template slot="item.createdAt" slot-scope="{ item }">
+            <div class="text-body-2 grey--text font-weight-medium">
+              {{ formatDate(item.createdAt) }}
+            </div>
+          </template>
+
+          <!-- Actions Column -->
+          <template slot="item.actions" slot-scope="{ item }">
+            <div class="d-flex">
+              <v-btn icon color="primary" class="bg-primary-light mr-2" @click="viewUser(item)">
+                <v-icon small>mdi-account-search-outline</v-icon>
+              </v-btn>
+              <v-menu offset-y left transition="slide-y-transition">
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn icon v-bind="attrs" v-on="on" class="bg-grey-light">
+                    <v-icon small>mdi-dots-horizontal</v-icon>
+                  </v-btn>
+                </template>
+                <v-list dense class="rounded-lg pa-2">
+                  <v-list-item @click="toggleUserRole(item)" class="rounded-md">
+                    <v-list-item-icon class="mr-2">
+                      <v-icon small :color="item.role === 'ADMIN' ? 'primary' : 'error'">
+                        {{ item.role === 'ADMIN' ? 'mdi-account-arrow-left' : 'mdi-shield-star' }}
+                      </v-icon>
+                    </v-list-item-icon>
+                    <v-list-item-title class="font-weight-bold text-caption">
+                      {{ item.role === 'ADMIN' ? 'REVOKE ADMIN' : 'PROMOTE TO ADMIN' }}
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-divider class="my-2" />
+                  <v-list-item class="rounded-md">
+                    <v-list-item-icon class="mr-2"><v-icon small color="error">mdi-account-off-outline</v-icon></v-list-item-icon>
+                    <v-list-item-title class="error--text font-weight-bold text-caption">SUSPEND PROFILE</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </div>
           </template>
         </v-data-table>
       </v-card>
     </div>
 
-    <!--User Details Dialog -->
-    <v-dialog v-model="showUserDialog" max-width="700px">
-      <v-card v-if="selectedUser" class="premium-dialog">
-        <div class="dialog-header">
-          <div class="header-content">
-            <v-avatar size="64" color="white" class="header-avatar">
-              <v-img v-if="selectedUser.profileImage" :src="getUserImage(selectedUser)" />
-              <span v-else class="gradient-text text-h4">
-                {{ selectedUser.name.charAt(0).toUpperCase() }}
-              </span>
-            </v-avatar>
-            <div class="header-info">
-              <h2 class="dialog-title">{{ selectedUser.name }}</h2>
-              <p class="dialog-subtitle">{{ selectedUser.email }}</p>
+    <!-- Enhanced User Profile Dialog -->
+    <v-dialog v-model="showUserDialog" max-width="800px" scrollable>
+      <v-card v-if="selectedUser" class="rounded-xl overflow-hidden">
+        <v-toolbar flat dark class="gradient-primary pa-6 h-auto" height="160">
+          <v-avatar size="96" class="border-4 white elevation-4 mr-8">
+            <v-img v-if="selectedUser.profileImage" :src="getUserImage(selectedUser)" />
+            <span v-else class="primary--text text-h3 font-weight-black">{{ selectedUser.name.charAt(0).toUpperCase() }}</span>
+          </v-avatar>
+          <div class="flex-grow-1">
+            <div class="d-flex align-center mb-1">
+              <h2 class="text-h4 font-weight-black mr-4">{{ selectedUser.name }}</h2>
+              <v-chip v-if="selectedUser.role === 'ADMIN'" x-small color="amber lighten-4" light class="font-weight-black coral--text">ADMINISTRATOR</v-chip>
             </div>
-            <v-spacer />
-            <v-chip
-              :color="selectedUser.role === 'ADMIN' ? '#fa709a' : '#0ea5e9'"
-              text-color="white"
-              class="role-chip"
-            >
-              {{ selectedUser.role }}
-            </v-chip>
-          </div>
-        </div>
-
-        <v-card-text class="dialog-content">
-          <!-- User Stats -->
-          <div class="stats-grid" v-if="userStats.ordersCount > 0 || userStats.totalSpent > 0">
-            <div class="stat-box">
-              <div class="stat-icon purple-gradient">
-                <v-icon color="white">mdi-cart</v-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value">{{ userStats.ordersCount || 0 }}</div>
-                <div class="stat-label">Orders</div>
-              </div>
+            <div class="d-flex align-center opacity-80">
+              <v-icon x-small class="mr-2">mdi-email-outline</v-icon>
+              <span class="text-body-1">{{ selectedUser.email }}</span>
             </div>
-            <div class="stat-box">
-              <div class="stat-icon green-gradient">
-                <v-icon color="white">mdi-cash</v-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value">${{ userStats.totalSpent ? userStats.totalSpent.toLocaleString() : '0' }}</div>
-                <div class="stat-label">Total Spent</div>
-              </div>
-            </div>
-            <div class="stat-box" v-if="userStats.reviewsCount > 0">
-              <div class="stat-icon blue-gradient">
-                <v-icon color="white">mdi-star</v-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-value">{{ userStats.reviewsCount || 0 }}</div>
-                <div class="stat-label">Reviews</div>
-              </div>
+            <div class="mt-4">
+              <v-chip x-small color="white" light class="px-3">Member since {{ formatDate(selectedUser.createdAt) }}</v-chip>
             </div>
           </div>
+          <v-btn icon @click="showUserDialog = false"><v-icon>mdi-close</v-icon></v-btn>
+        </v-toolbar>
 
-          <!-- User Information -->
-          <v-divider class="my-6"></v-divider>
+        <v-card-text class="pa-8">
+          <div class="text-caption font-weight-black grey--text text-uppercase letter-spacing-2 mb-6">Interaction Intelligence</div>
+          <v-row class="mb-8">
+            <v-col cols="4">
+              <v-card flat class="rounded-xl border-light pa-6 text-center shadow-sm">
+                <div class="text-h4 font-weight-black mb-1">{{ userStats.ordersCount || 0 }}</div>
+                <div class="text-caption grey--text font-weight-bold">Total Orders</div>
+              </v-card>
+            </v-col>
+            <v-col cols="4">
+              <v-card flat class="rounded-xl border-light pa-6 text-center shadow-sm">
+                <div class="text-h4 font-weight-black success--text mb-1">${{ (userStats.totalSpent || 0).toLocaleString() }}</div>
+                <div class="text-caption grey--text font-weight-bold">LTV (Life Time Value)</div>
+              </v-card>
+            </v-col>
+            <v-col cols="4">
+              <v-card flat class="rounded-xl border-light pa-6 text-center shadow-sm">
+                <div class="text-h4 font-weight-black primary--text mb-1">{{ (userStats.ordersCount ? (userStats.totalSpent / userStats.ordersCount) : 0).toFixed(0) }}</div>
+                <div class="text-caption grey--text font-weight-bold">Avg. Order Value</div>
+              </v-card>
+            </v-col>
+          </v-row>
 
           <v-row>
             <v-col cols="12" md="6">
-              <div class="info-section">
-                <h3 class="section-title">
-                  <v-icon color="primary" class="mr-2">mdi-account</v-icon>
-                  Personal Information
-                </h3>
-                <div class="info-item">
-                  <span class="info-label">Name:</span>
-                  <span class="info-value">{{ selectedUser.name }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Email:</span>
-                  <span class="info-value">{{ selectedUser.email }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Phone:</span>
-                  <span class="info-value">{{ selectedUser.phone || 'Not provided' }}</span>
-                </div>
-              </div>
+              <div class="text-caption font-weight-black grey--text text-uppercase letter-spacing-2 mb-4">Profile Data</div>
+              <v-list dense class="pa-0">
+                <v-list-item class="px-0 py-2 border-bottom-light">
+                  <v-list-item-content><v-list-item-title class="grey--text font-weight-bold">Status</v-list-item-title></v-list-item-content>
+                  <v-list-item-action>
+                    <v-chip x-small :color="selectedUser.isActive ? 'success' : 'error'" class="font-weight-black text-uppercase">{{ selectedUser.isActive ? 'Active' : 'Banned' }}</v-chip>
+                  </v-list-item-action>
+                </v-list-item>
+                <v-list-item class="px-0 py-2 border-bottom-light">
+                  <v-list-item-content><v-list-item-title class="grey--text font-weight-bold">Trust Score</v-list-item-title></v-list-item-content>
+                  <v-list-item-action>
+                    <v-rating :value="selectedUser.isVerified ? 5 : 2" color="amber darken-2" dense small readonly />
+                  </v-list-item-action>
+                </v-list-item>
+              </v-list>
             </v-col>
-            <v-col cols="12" md="6">
-              <div class="info-section">
-                <h3 class="section-title">
-                  <v-icon color="success" class="mr-2">mdi-shield-check</v-icon>
-                  Account Status
-                </h3>
-                <div class="info-item">
-                  <span class="info-label">Role:</span>
-                  <v-chip small :color="selectedUser.role === 'ADMIN' ? 'error' : 'primary'" text-color="white">
-                    {{ selectedUser.role }}
-                  </v-chip>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Verified:</span>
-                  <v-chip small :color="selectedUser.isVerified ? 'success' : 'error'" text-color="white">
-                    <v-icon left small>{{ selectedUser.isVerified ? 'mdi-check-circle' : 'mdi-close-circle' }}</v-icon>
-                    {{ selectedUser.isVerified ? 'Yes' : 'No' }}
-                  </v-chip>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Active:</span>
-                  <v-chip small :color="selectedUser.isActive ? 'success' : 'error'" text-color="white">
-                    <v-icon left small>{{ selectedUser.isActive ? 'mdi-check-circle' : 'mdi-close-circle' }}</v-icon>
-                    {{ selectedUser.isActive ? 'Yes' : 'No' }}
-                  </v-chip>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Joined:</span>
-                  <span class="info-value">{{ formatDate(selectedUser.createdAt) }}</span>
-                </div>
-              </div>
+            <v-col cols="12" md="6" class="pl-md-8">
+              <div class="text-caption font-weight-black grey--text text-uppercase letter-spacing-2 mb-4">Contact Gateway</div>
+              <v-btn block x-large outlined color="primary" class="rounded-xl font-weight-black mb-4">
+                <v-icon left>mdi-message-outline</v-icon> INITIATE CHAT
+              </v-btn>
+              <v-btn block x-large outlined color="grey darken-2" class="rounded-xl font-weight-black">
+                <v-icon left>mdi-email-send-outline</v-icon> SEND BROADCAST
+              </v-btn>
             </v-col>
           </v-row>
         </v-card-text>
 
-        <v-card-actions class="dialog-actions">
+        <v-card-actions class="pa-8 bg-white border-top">
+          <v-btn x-large text rounded class="px-8 font-weight-bold grey--text" @click="showUserDialog = false">Dismiss Window</v-btn>
           <v-spacer />
-          <v-btn large class="close-btn" @click="showUserDialog = false">
-            <v-icon left>mdi-close</v-icon>
-            Close
+          <v-btn x-large color="error" outlined rounded class="px-10 font-weight-black mr-4">
+            <v-icon left>mdi-alert-octagon-outline</v-icon> FLAG ACCOUNT
+          </v-btn>
+          <v-btn x-large color="primary" rounded elevation="12" class="px-12 font-weight-black">
+            EDIT PROFILE
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -203,364 +265,109 @@ import AdminLayout from '@/components/AdminLayout.vue'
 
 export default {
   name: 'AdminUsers',
-  components: {
-    AdminLayout
-  },
+  components: { AdminLayout },
   data() {
     return {
+      search: '',
       loading: false,
       users: [],
       selectedUser: null,
       showUserDialog: false,
       roleFilter: null,
-      userStats: {
-        ordersCount: 0,
-        totalSpent: 0,
-        reviewsCount: 0
-      },
-      roleOptions: [
-        { text: 'Admin', value: 'ADMIN' },
-        { text: 'User', value: 'USER' }
-      ],
+      userStats: { ordersCount: 0, totalSpent: 0 },
+      roleOptions: [{ text: 'Admin Account', value: 'ADMIN' }, { text: 'Customer Profile', value: 'USER' }],
       headers: [
-        { text: 'Avatar', value: 'avatar', sortable: false },
-        { text: 'Name', value: 'name' },
-        { text: 'Email', value: 'email' },
-        { text: 'Role', value: 'role' },
-        { text: 'Verified', value: 'isVerified' },
-        { text: 'Joined', value: 'createdAt' },
-        { text: 'Actions', value: 'actions', sortable: false }
+        { text: 'Identification', value: 'name', align: 'start' },
+        { text: 'Role Tier', value: 'role' },
+        { text: 'Verification', value: 'isVerified', align: 'center' },
+        { text: 'Onboarding Date', value: 'createdAt' },
+        { text: 'Management Control', value: 'actions', align: 'end', sortable: false }
       ]
     }
   },
-  async created() {
-    await this.fetchUsers()
-  },
+  async created() { await this.fetchUsers() },
   methods: {
     async fetchUsers() {
       this.loading = true
       try {
-        const params = {}
-        if (this.roleFilter) {
-          params.role = this.roleFilter
-        }
-        
+        const params = this.roleFilter ? { role: this.roleFilter } : {}
         const response = await this.$http.get('/admin/users', { params })
         this.users = response.data?.users || []
       } catch (error) {
-        this.$store.dispatch('ui/showSnackbar', {
-          message: 'Failed to fetch users',
-          color: 'error'
-        })
-      } finally {
-        this.loading = false
-      }
+        this.$store.dispatch('ui/showSnackbar', { message: 'User directory connection error.', color: 'error' })
+      } finally { this.loading = false }
     },
     async toggleUserRole(user) {
       const newRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN'
-      const action = newRole === 'ADMIN' ? 'promote to admin' : 'remove admin privileges'
-      
-      if (confirm(`Are you sure you want to ${action} for ${user.name}?`)) {
+      if (confirm(`Change clearance level for ${user.name} to ${newRole}?`)) {
         try {
           await this.$http.patch(`/admin/users/${user.id}/role`, { role: newRole })
-          this.$store.dispatch('ui/showSnackbar', {
-            message: 'User role updated successfully!',
-            color: 'success'
-          })
+          this.$store.dispatch('ui/showSnackbar', { message: 'Security privileges updated.', color: 'success' })
           await this.fetchUsers()
         } catch (error) {
-          this.$store.dispatch('ui/showSnackbar', {
-            message: 'Failed to update user role',
-            color: 'error'
-          })
+          this.$store.dispatch('ui/showSnackbar', { message: 'Permission update failed.', color: 'error' })
         }
       }
     },
-
     async viewUser(user) {
       this.selectedUser = user
       this.showUserDialog = true
-      
-      // Reset stats
-      this.userStats = {
-        ordersCount: 0,
-        totalSpent: 0,
-        reviewsCount: 0
-      }
-      
-      // Fetch user statistics
-      await this.fetchUserStats(user.id || user._id)
-    },
-    
-    async fetchUserStats(userId) {
+      this.userStats = { ordersCount: 0, totalSpent: 0 }
       try {
-        // Fetch user's orders to calculate statistics
-        const response = await this.$http.get('/orders', {
-          params: { userId }
-        })
-        
-        const userOrders = response.data?.orders || []
-        
-        this.userStats.ordersCount = userOrders.length
-        this.userStats.totalSpent = userOrders.reduce((sum, order) => {
-          return sum + (order.total || 0)
-        }, 0)
-        
-        // If you have a reviews endpoint, fetch reviews count
-        // For now, we'll leave it at 0 unless you have this data
-      } catch (error) {
-        console.error('Error fetching user stats:', error)
-        // Keep stats at 0 if fetch fails
-      }
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleDateString()
+        const response = await this.$http.get('/orders', { params: { userId: user.id || user._id } })
+        const orders = response.data?.orders || []
+        this.userStats.ordersCount = orders.length
+        this.userStats.totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0)
+      } catch (e) { /* silent stats fail */ }
     },
     getUserImage(user) {
-      if (!user.profileImage) return ''
-      if (user.profileImage.startsWith('/uploads/')) {
-        return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${user.profileImage}`
-      }
-      return user.profileImage
-    }
+      if (user.profileImage?.startsWith('/uploads/')) return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${user.profileImage}`
+      return user.profileImage || ''
+    },
+    formatDate(date) { return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }
   }
 }
 </script>
 
 <style scoped>
-.users-content {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+.admin-users-view {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 16px;
+.border-light { border: 1px solid rgba(0,0,0,0.06) !important; }
+.border-bottom-light { border-bottom: 1px solid rgba(0,0,0,0.05) !important; }
+.border-right { border-right: 1px solid rgba(0,0,0,0.06) !important; }
+.soft-shadow { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04) !important; }
+
+.premium-table >>> th {
+  background-color: #f8fafc !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px;
+  height: 60px !important;
 }
 
-.page-title {
-  font-size: 2rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
+.premium-table >>> td {
+  height: 72px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
 }
 
-.users-table {
-  border-radius: 16px;
-  overflow: hidden;
-}
+.bg-primary-light { background-color: rgba(14, 165, 233, 0.08) !important; }
+.bg-grey-light { background-color: rgba(100, 116, 139, 0.08) !important; }
 
-/* Premium Dialog Styles */
-.premium-dialog {
-  border-radius: 24px !important;
-  overflow: hidden;
-}
+.gradient-primary { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important; }
+.gradient-coral { background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%) !important; }
+.coral--text { color: #e11d48 !important; }
 
-.dialog-header {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  padding: 32px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
+.shadow-sm { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
+.letter-spacing-2 { letter-spacing: 2px; }
+.opacity-80 { opacity: 0.8; }
+.border-4 { border: 4px solid white !important; }
 
-.dialog-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 300px;
-  height: 300px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  position: relative;
-  z-index: 1;
-}
-
-.header-avatar {
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-weight: 800;
-}
-
-.header-info {
-  flex: 1;
-}
-
-.dialog-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  margin: 0;
-  color: white;
-  line-height: 1.2;
-}
-
-.dialog-subtitle {
-  margin: 4px 0 0 0;
-  opacity: 0.9;
-  font-size: 0.95rem;
-}
-
-.role-chip {
-  font-weight: 700;
-  padding: 20px 16px;
-}
-
-.dialog-content {
-  padding: 32px !important;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  margin-bottom: 8px;
-}
-
-.stat-box {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.03), rgba(118, 75, 162, 0.03));
-  border: 1px solid rgba(14, 165, 233, 0.1);
-  transition: all 0.3s ease;
-}
-
-.stat-box:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-}
-
-.stat-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.purple-gradient { background: linear-gradient(135deg, #0ea5e9, #06b6d4); }
-.green-gradient { background: linear-gradient(135deg, #43e97b, #38f9d7); }
-.blue-gradient { background: linear-gradient(135deg, #4facfe, #00f2fe); }
-
-.stat-info {
-  flex: 1;
-}
-
-.stat-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: #1e293b;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.info-section {
-  padding: 0;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-}
-
-.info-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(14, 165, 233, 0.08);
-}
-
-.info-item:last-child {
-  border-bottom: none;
-}
-
-.info-label {
-  font-weight: 600;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
-.info-value {
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.dialog-actions {
-  padding: 20px 32px !important;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), rgba(118, 75, 162, 0.02));
-  border-top: 1px solid rgba(14, 165, 233, 0.1);
-}
-
-.close-btn {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
-  color: white !important;
-  text-transform: none;
-  font-weight: 700;
-  border-radius: 12px;
-  padding: 0 32px;
-}
-
-@media (max-width: 600px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .dialog-header {
-    padding: 24px;
-  }
-
-  .header-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .dialog-content {
-    padding: 24px !important;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

@@ -1,264 +1,310 @@
 <template>
   <AdminLayout>
-    <div class="products-content">
-      <div class="page-header mb-6">
-        <h1 class="page-title">Product Management</h1>
-        <v-btn color="primary" large @click="showAddDialog = true">
-          <v-icon left>mdi-plus</v-icon>
-          Add New Product
-        </v-btn>
+    <div class="admin-products-view">
+      <!-- Premium Page Header -->
+      <div class="page-header mb-10">
+        <v-row align="end" no-gutters>
+          <v-col cols="12" md="6">
+            <div class="d-flex align-center mb-2">
+              <v-btn icon color="primary" @click="$router.go(-1)" class="mr-2">
+                <v-icon>mdi-arrow-left</v-icon>
+              </v-btn>
+              <span class="text-overline font-weight-black primary--text letter-spacing-2">CATALOG MANAGER</span>
+            </div>
+            <h1 class="text-h3 font-weight-black mb-2">Global Inventory</h1>
+            <p class="grey--text text-subtitle-1 mb-0">Manage your product listings, stock levels, and multi-channel pricing.</p>
+          </v-col>
+          <v-col cols="12" md="6" class="text-md-right mt-6 mt-md-0">
+            <div class="d-flex align-center justify-md-end gap-3">
+              <v-btn outlined color="primary" rounded class="px-6 font-weight-bold" @click="fetchProducts">
+                <v-icon left>mdi-refresh</v-icon> Sync Data
+              </v-btn>
+              <v-btn color="primary" x-large rounded elevation="8" class="px-8 font-weight-black" @click="showAddDialog = true">
+                <v-icon left size="24">mdi-plus</v-icon> Create Product
+              </v-btn>
+            </div>
+          </v-col>
+        </v-row>
       </div>
 
-      <!-- Products List -->
-      <v-card class="products-table">
+      <!-- Filters & Search Toolbar -->
+      <v-card class="filter-card rounded-xl border-light mb-8 pa-4 soft-shadow">
+        <v-row align="center" dense>
+          <v-col cols="12" md="5">
+            <v-text-field
+              v-model="search"
+              placeholder="Search products by SKU, name or ID..."
+              prepend-inner-icon="mdi-magnify"
+              outlined
+              dense
+              hide-details
+              class="rounded-lg search-field-premium"
+            />
+          </v-col>
+          <v-col cols="12" md="3">
+            <v-select
+              v-model="categoryFilter"
+              :items="categoryItems"
+              placeholder="All Collections"
+              outlined
+              dense
+              hide-details
+              clearable
+              prepend-inner-icon="mdi-filter-variant"
+              class="rounded-lg"
+            />
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-select
+              v-model="stockFilter"
+              :items="stockOptions"
+              placeholder="Stock Status"
+              outlined
+              dense
+              hide-details
+              prepend-inner-icon="mdi-warehouse"
+              class="rounded-lg"
+            />
+          </v-col>
+          <v-col cols="12" md="2">
+            <v-btn block color="primary" text class="font-weight-bold">
+              Advanced Filters
+            </v-btn>
+          </v-col>
+        </v-row>
+      </v-card>
+
+      <!-- Products Data Table -->
+      <v-card class="table-card rounded-xl border-light soft-shadow overflow-hidden">
         <v-data-table
           :headers="headers"
-          :items="products"
+          :items="filteredProducts"
           :loading="loading"
-          class="elevation-0"
+          :search="search"
+          :items-per-page="10"
+          class="bg-white premium-table"
         >
-          <template slot="item.images" slot-scope="{ item }">
-            <v-avatar size="40" class="ma-1">
-              <v-img :src="getProductImage(item)" />
-            </v-avatar>
+          <!-- Custom Product Column -->
+          <template slot="item.name" slot-scope="{ item }">
+            <div class="d-flex align-center py-4">
+              <v-avatar size="64" rounded="lg" class="mr-4 border-light grey lighten-4">
+                <v-img :src="getProductImage(item)" cover />
+              </v-avatar>
+              <div class="overflow-hidden">
+                <div class="text-subtitle-1 font-weight-black text-truncate">{{ item.name }}</div>
+                <div class="text-caption grey--text d-flex align-center">
+                  <span class="mr-2">SKU: {{ item.id.toString().padStart(6, '0') }}</span>
+                  <v-divider vertical class="mx-2" style="height: 12px" />
+                  <span>{{ item.category?.name || 'Uncategorized' }}</span>
+                </div>
+              </div>
+            </div>
           </template>
+
+          <!-- Status Column -->
+          <template slot="item.stock" slot-scope="{ item }">
+            <div class="d-flex flex-column">
+              <div class="d-flex align-center mb-1">
+                <v-icon small :color="getStockColor(item.stock)" class="mr-2">mdi-circle-medium</v-icon>
+                <span class="font-weight-black">{{ item.stock }} in stock</span>
+              </div>
+              <v-progress-linear
+                :value="Math.min((item.stock / 100) * 100, 100)"
+                :color="getStockColor(item.stock)"
+                height="4"
+                rounded
+                class="stock-bar"
+              />
+            </div>
+          </template>
+
+          <!-- Price Column -->
           <template slot="item.price" slot-scope="{ item }">
-            ${{ item.price.toFixed(2) }}
+            <div class="text-h6 font-weight-black primary--text">${{ item.price?.toFixed(2) }}</div>
           </template>
+
+          <!-- Actions Column -->
           <template slot="item.actions" slot-scope="{ item }">
-            <v-btn icon small @click="editProduct(item)">
-              <v-icon>mdi-pencil</v-icon>
-            </v-btn>
-            <v-btn icon small color="error" @click="deleteProduct(item.id)">
-              <v-icon>mdi-delete</v-icon>
-            </v-btn>
+            <div class="d-flex">
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn icon color="primary" v-bind="attrs" v-on="on" @click="editProduct(item)" class="mx-1 bg-primary-light">
+                    <v-icon small>mdi-pencil-outline</v-icon>
+                  </v-btn>
+                </template>
+                <span>Edit Metadata</span>
+              </v-tooltip>
+              
+              <v-tooltip top>
+                <template v-slot:activator="{ on, attrs }">
+                  <v-btn icon color="error" v-bind="attrs" v-on="on" @click="deleteProduct(item.id)" class="mx-1 bg-error-light">
+                    <v-icon small>mdi-trash-can-outline</v-icon>
+                  </v-btn>
+                </template>
+                <span>Remove Item</span>
+              </v-tooltip>
+            </div>
+          </template>
+
+          <!-- Footer customization -->
+          <template slot="footer.page-text" slot-scope="{ pageStart, pageStop, itemsLength }">
+            Showing {{ pageStart }} - {{ pageStop }} of {{ itemsLength }} products
           </template>
         </v-data-table>
       </v-card>
     </div>
 
-    <!-- Add/Edit Product Dialog -->
-    <v-dialog v-model="showAddDialog" max-width="900px" persistent scrollable>
-      <v-card class="premium-dialog">
-        <div class="dialog-header">
-          <div class="header-content">
-            <v-icon large color="white" class="header-icon">mdi-package-variant</v-icon>
-            <div>
-              <h2 class="dialog-title">{{ editingProduct ? 'Edit Product' : 'Add New Product' }}</h2>
-              <p class="dialog-subtitle">{{ editingProduct ? 'Update product information' : 'Create a new product listing' }}</p>
-            </div>
+    <!-- Product Editor Dialog -->
+    <v-dialog v-model="showAddDialog" max-width="1000px" persistent scrollable>
+      <v-card class="editor-dialog rounded-xl">
+        <v-toolbar flat class="px-4 py-2 border-bottom">
+          <v-avatar color="primary lighten-5" size="48" rounded="lg" class="mr-4">
+            <v-icon color="primary">{{ editingProduct ? 'mdi-package-variant-closed' : 'mdi-plus-box' }}</v-icon>
+          </v-avatar>
+          <div>
+            <v-toolbar-title class="text-h5 font-weight-black">{{ editingProduct ? 'Edit Inventory Item' : 'Create New Collection Item' }}</v-toolbar-title>
+            <div class="text-caption grey--text font-weight-bold">Configure product specifications and visibility</div>
           </div>
-        </div>
+          <v-spacer />
+          <v-btn icon @click="closeDialog">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-toolbar>
 
-        <v-card-text class="dialog-content">
+        <v-card-text class="pa-8">
           <ValidationObserver ref="observer">
             <v-form>
               <v-row>
-                <v-col cols="12" md="6">
-                  <div class="form-group">
-                    <label class="form-label">Product Name *</label>
-                    <ValidationProvider name="name" rules="required">
-                      <template v-slot="{ errors }">
-                        <v-text-field
-                          v-model="productForm.name"
-                          placeholder="Enter product name"
-                          :error-messages="errors"
-                          outlined
-                          dense
-                          class="modern-input"
-                        />
-                      </template>
-                    </ValidationProvider>
-                  </div>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <div class="form-group">
-                    <label class="form-label">Category *</label>
-                    <ValidationProvider name="categoryId" rules="required">
-                      <template v-slot="{ errors }">
-                        <v-select
-                          v-model="productForm.categoryId"
-                          :items="categoryItems"
-                          placeholder="Select category"
-                          :error-messages="errors"
-                          outlined
-                          dense
-                          class="modern-input"
-                        />
-                      </template>
-                    </ValidationProvider>
-                  </div>
-                </v-col>
-              </v-row>
+                <!-- Image Section -->
+                <v-col cols="12" md="4">
+                  <div class="section-label mb-4">Product Visuals</div>
+                  <div class="image-uploader rounded-xl border-dashed d-flex flex-column align-center justify-center pa-6 mb-6">
+                    <div v-if="selectedFiles.length === 0 && (!editingProduct || !editingProduct.images || editingProduct.images.length === 0)" class="text-center">
+                      <v-icon size="48" color="primary lighten-3" class="mb-4">mdi-cloud-upload-outline</v-icon>
+                      <div class="text-subtitle-2 font-weight-bold mb-1">Click or drag images</div>
+                      <div class="text-caption grey--text">Supported: JPG, PNG, WEBP</div>
+                    </div>
+                    
+                    <v-row v-else dense class="w-100">
+                      <v-col v-for="(img, i) in displayImages" :key="i" cols="6" class="position-relative">
+                        <v-img :src="img" aspect-ratio="1" class="rounded-lg border-light" cover />
+                        <v-btn icon x-small color="error" class="remove-btn" @click="removeImage(i)">
+                          <v-icon x-small>mdi-close</v-icon>
+                        </v-btn>
+                      </v-col>
+                    </v-row>
 
-              <div class="form-group">
-                <label class="form-label">Description *</label>
-                <ValidationProvider name="description" rules="required">
-                  <template v-slot="{ errors }">
-                    <v-textarea
-                      v-model="productForm.description"
-                      placeholder="Enter product description"
-                      :error-messages="errors"
-                      outlined
-                      rows="3"
-                      dense
-                      class="modern-input"
-                    />
-                  </template>
-                </ValidationProvider>
-              </div>
-
-              <v-row>
-                <v-col cols="12" md="6">
-                  <div class="form-group">
-                    <label class="form-label">Price ($) *</label>
-                    <ValidationProvider name="price" rules="required">
-                      <template v-slot="{ errors }">
-                        <v-text-field
-                          v-model="productForm.price"
-                          placeholder="0.00"
-                          type="number"
-                          step="0.01"
-                          :error-messages="errors"
-                          outlined
-                          dense
-                          prefix="$"
-                          class="modern-input"
-                        />
-                      </template>
-                    </ValidationProvider>
+                    <input type="file" ref="fileInput" multiple hidden @change="handleFileUpload" accept="image/*" />
+                    <v-btn color="primary" rounded outlined class="mt-6 font-weight-black" @click="$refs.fileInput.click()">
+                      {{ displayImages.length > 0 ? 'Add More' : 'Select Files' }}
+                    </v-btn>
                   </div>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <div class="form-group">
-                    <label class="form-label">Stock Quantity *</label>
-                    <ValidationProvider name="stock" rules="required">
-                      <template v-slot="{ errors }">
-                        <v-text-field
-                          v-model="productForm.stock"
-                          placeholder="0"
-                          type="number"
-                          :error-messages="errors"
-                          outlined
-                          dense
-                          class="modern-input"
-                        />
-                      </template>
-                    </ValidationProvider>
-                  </div>
-                </v-col>
-              </v-row>
-
-              <!-- Image Upload -->
-              <div class="form-group">
-                <label class="form-label">Product Images</label>
-                <div class="upload-area">
-                  <v-file-input
-                    v-model="selectedFiles"
-                    multiple
-                    accept="image/*"
-                    outlined
-                    dense
-                    prepend-icon=""
-                    prepend-inner-icon="mdi-camera-multiple"
-                    placeholder="Click to select images (max 5)"
-                    show-size
-                    :rules="fileRules"
-                    class="modern-input upload-input"
-                  >
-                    <template v-slot:selection="{ index }">
-                      <v-chip v-if="index === 0" small color="primary" label>
-                        <v-icon left small>mdi-image-multiple</v-icon>
-                        {{ selectedFiles.length }} file(s)
-                      </v-chip>
-                    </template>
-                  </v-file-input>
                   
-                  <!-- Image Preview Gallery -->
-                  <div v-if="(selectedFiles && selectedFiles.length > 0) || (editingProduct && editingProduct.images && editingProduct.images.length > 0)" class="image-preview-container">
-                    <div class="preview-label">{{ selectedFiles && selectedFiles.length > 0 ? 'New Images Preview:' : 'Existing Images:' }}</div>
+                  <v-alert border="left" colored-border color="info" elevation="2" class="text-caption rounded-lg">
+                    High-quality images increase store conversion rate by up to 35%.
+                  </v-alert>
+                </v-col>
+
+                <!-- Details Section -->
+                <v-col cols="12" md="8" class="pl-md-8">
+                  <div class="section-label mb-4">Core Specifications</div>
+                  
+                  <v-row>
+                    <v-col cols="12">
+                      <ValidationProvider name="name" rules="required">
+                        <template v-slot="{ errors }">
+                          <v-text-field
+                            v-model="productForm.name"
+                            label="Product Title"
+                            placeholder="e.g., Premium Leather Weekend Bag"
+                            outlined
+                            :error-messages="errors"
+                            class="rounded-lg"
+                          />
+                        </template>
+                      </ValidationProvider>
+                    </v-col>
                     
-                    <!-- Show existing images when editing -->
-                    <v-row class="image-gallery" v-if="editingProduct && editingProduct.images && editingProduct.images.length > 0 && (!selectedFiles || selectedFiles.length === 0)">
-                      <v-col
-                        v-for="(imageUrl, index) in editingProduct.images"
-                        :key="'existing-' + index"
-                        cols="6"
-                        sm="4"
-                        md="3"
-                      >
-                        <div class="gallery-item">
-                          <v-img
-                            :src="getProductImage({ images: [imageUrl] })"
-                            height="140"
-                            class="preview-image"
-                          >
-                            <template v-slot:placeholder>
-                              <v-row class="fill-height ma-0" align="center" justify="center">
-                                <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
-                              </v-row>
-                            </template>
-                          </v-img>
-                          <div class="image-number">{{ index + 1 }}</div>
-                        </div>
-                      </v-col>
-                    </v-row>
-                    
-                    <!-- Show new selected files -->
-                    <v-row class="image-gallery" v-if="selectedFiles && selectedFiles.length > 0">
-                      <v-col
-                        v-for="(file, index) in selectedFiles"
-                        :key="'new-' + index"
-                        cols="6"
-                        sm="4"
-                        md="3"
-                      >
-                        <div class="gallery-item">
-                          <v-img
-                            :src="getFilePreview(file)"
-                            height="140"
-                            class="preview-image"
-                          >
-                            <template v-slot:placeholder>
-                              <v-row class="fill-height ma-0" align="center" justify="center">
-                                <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
-                              </v-row>
-                            </template>
-                          </v-img>
-                          <v-btn
-                            icon
-                            x-small
-                            color="error"
-                            class="remove-image-btn"
-                            @click="removeFile(index)"
-                          >
-                            <v-icon x-small>mdi-close</v-icon>
-                          </v-btn>
-                          <div class="image-number">{{ index + 1 }}</div>
-                        </div>
-                      </v-col>
-                    </v-row>
-                  </div>
-                </div>
-              </div>
+                    <v-col cols="12" md="6">
+                      <ValidationProvider name="categoryId" rules="required">
+                        <template v-slot="{ errors }">
+                          <v-select
+                            v-model="productForm.categoryId"
+                            :items="categoryItems"
+                            label="Primary Category"
+                            outlined
+                            :error-messages="errors"
+                            class="rounded-lg"
+                          />
+                        </template>
+                      </ValidationProvider>
+                    </v-col>
+
+                    <v-col cols="12" md="3">
+                      <ValidationProvider name="price" rules="required">
+                        <template v-slot="{ errors }">
+                          <v-text-field
+                            v-model="productForm.price"
+                            label="Retail Price"
+                            prefix="$"
+                            type="number"
+                            outlined
+                            :error-messages="errors"
+                            class="rounded-lg"
+                          />
+                        </template>
+                      </ValidationProvider>
+                    </v-col>
+
+                    <v-col cols="12" md="3">
+                      <ValidationProvider name="stock" rules="required">
+                        <template v-slot="{ errors }">
+                          <v-text-field
+                            v-model="productForm.stock"
+                            label="Inventory"
+                            type="number"
+                            outlined
+                            :error-messages="errors"
+                            class="rounded-lg"
+                          />
+                        </template>
+                      </ValidationProvider>
+                    </v-col>
+
+                    <v-col cols="12">
+                      <v-textarea
+                        v-model="productForm.description"
+                        label="Product Narration"
+                        placeholder="Detail the features, materials, and value proposition..."
+                        outlined
+                        rows="4"
+                        class="rounded-lg"
+                      />
+                    </v-col>
+                  </v-row>
+
+                  <div class="section-label mb-4 mt-4">Advanced Config</div>
+                  <v-row>
+                    <v-col cols="12" md="6">
+                      <v-switch v-model="productForm.active" color="primary" label="Active & Visible in Store" inset />
+                    </v-col>
+                    <v-col cols="12" md="6">
+                      <v-switch v-model="productForm.featured" color="amber darken-2" label="Featured in Collections" inset />
+                    </v-col>
+                  </v-row>
+                </v-col>
+              </v-row>
             </v-form>
           </ValidationObserver>
         </v-card-text>
 
-        <v-card-actions class="dialog-actions">
-          <v-btn text large class="cancel-btn" @click="closeDialog">
-            <v-icon left>mdi-close</v-icon>
-            Cancel
-          </v-btn>
+        <v-divider />
+
+        <v-card-actions class="pa-8">
+          <v-btn text large rounded class="px-8 font-weight-bold grey--text text--darken-2" @click="closeDialog">Discard</v-btn>
           <v-spacer />
-          <v-btn
-            large
-            class="save-btn"
-            :loading="saving"
-            @click="saveProduct"
-          >
-            <v-icon left>{{ editingProduct ? 'mdi-check' : 'mdi-plus' }}</v-icon>
-            {{ editingProduct ? 'Update Product' : 'Create Product' }}
+          <v-btn x-large color="primary" rounded elevation="12" class="px-12 font-weight-black" :loading="saving" @click="saveProduct">
+            <v-icon left>mdi-check-circle-outline</v-icon> {{ editingProduct ? 'Synchronize Updates' : 'Publish Product' }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -277,30 +323,34 @@ export default {
   },
   data() {
     return {
+      search: '',
+      categoryFilter: null,
+      stockFilter: 'all',
       showAddDialog: false,
       editingProduct: null,
       saving: false,
       loading: false,
       products: [],
       selectedFiles: [],
-      headers: [
-        { text: 'Image', value: 'images', sortable: false },
-        { text: 'Name', value: 'name' },
-        { text: 'Category', value: 'category.name' },
-        { text: 'Price', value: 'price' },
-        { text: 'Stock', value: 'stock' },
-        { text: 'Actions', value: 'actions', sortable: false },
-      ],
       productForm: {
         name: '',
         description: '',
         price: '',
         stock: '',
-        categoryId: null
+        categoryId: null,
+        active: true,
+        featured: false
       },
-      fileRules: [
-        files => !files || files.length <= 5 || 'Maximum 5 images allowed',
-        files => !files || files.every(file => file.size <= 5 * 1024 * 1024) || 'File size must be less than 5MB'
+      stockOptions: [
+        { text: 'All Inventory', value: 'all' },
+        { text: 'Low Stock (< 10)', value: 'low' },
+        { text: 'Out of Stock', value: 'out' }
+      ],
+      headers: [
+        { text: 'Product & SKU', value: 'name', align: 'start', sortable: true },
+        { text: 'Inventory Level', value: 'stock', sortable: true },
+        { text: 'Unit Price', value: 'price', sortable: true },
+        { text: 'Control Actions', value: 'actions', sortable: false, align: 'end' }
       ]
     }
   },
@@ -313,6 +363,28 @@ export default {
         text: cat.name,
         value: cat.id
       }))
+    },
+    filteredProducts() {
+      let filtered = this.products;
+      if (this.categoryFilter) {
+        filtered = filtered.filter(p => p.categoryId === this.categoryFilter);
+      }
+      if (this.stockFilter === 'low') {
+        filtered = filtered.filter(p => p.stock > 0 && p.stock < 10);
+      } else if (this.stockFilter === 'out') {
+        filtered = filtered.filter(p => p.stock === 0);
+      }
+      return filtered;
+    },
+    displayImages() {
+      const images = [];
+      if (this.editingProduct && this.editingProduct.images) {
+        images.push(...this.editingProduct.images.map(img => this.getProductImage({ images: [img] })));
+      }
+      if (this.selectedFiles.length > 0) {
+        images.push(...this.selectedFiles.map(file => URL.createObjectURL(file)));
+      }
+      return images;
     }
   },
   async created() {
@@ -328,7 +400,7 @@ export default {
         this.products = response.data?.products || []
       } catch (error) {
         this.$store.dispatch('ui/showSnackbar', {
-          message: 'Failed to fetch products',
+          message: 'Cloud sync failed. Checking local buffer...',
           color: 'error'
         })
       } finally {
@@ -342,16 +414,14 @@ export default {
       this.saving = true
       try {
         const productData = {
-          name: this.productForm.name,
-          description: this.productForm.description,
+          ...this.productForm,
           price: parseFloat(this.productForm.price),
           stock: parseInt(this.productForm.stock),
           categoryId: parseInt(this.productForm.categoryId),
           images: this.editingProduct ? [...this.editingProduct.images] : []
         }
         
-        // Convert new images to Base64
-        if (this.selectedFiles && this.selectedFiles.length > 0) {
+        if (this.selectedFiles.length > 0) {
           const base64Promises = this.selectedFiles.map(file => {
             return new Promise((resolve) => {
               const reader = new FileReader();
@@ -360,7 +430,7 @@ export default {
             });
           });
           const base64Images = await Promise.all(base64Promises);
-          productData.images = base64Images;
+          productData.images = [...productData.images, ...base64Images];
         }
 
         if (this.editingProduct) {
@@ -370,16 +440,15 @@ export default {
         }
 
         this.$store.dispatch('ui/showSnackbar', {
-          message: `Product ${this.editingProduct ? 'updated' : 'created'} successfully!`,
+          message: `Product record successfully ${this.editingProduct ? 'updated' : 'published'}!`,
           color: 'success'
         })
         
         this.closeDialog()
         await this.fetchProducts()
       } catch (error) {
-        console.error('Save product error:', error)
         this.$store.dispatch('ui/showSnackbar', {
-          message: 'Failed to save product',
+          message: 'Transaction failed. Please verify product schema.',
           color: 'error'
         })
       } finally {
@@ -393,25 +462,24 @@ export default {
         description: product.description,
         price: product.price.toString(),
         stock: product.stock.toString(),
-        categoryId: product.categoryId
+        categoryId: product.categoryId,
+        active: product.active ?? true,
+        featured: product.featured ?? false
       }
       this.selectedFiles = []
       this.showAddDialog = true
     },
     async deleteProduct(id) {
-      if (confirm('Are you sure you want to delete this product?')) {
+      if (confirm('Are you certain? This action will permanently remove the item from all catalog indices.')) {
         try {
           await this.$http.delete(`/products/${id}`)
           this.$store.dispatch('ui/showSnackbar', {
-            message: 'Product deleted successfully!',
+            message: 'Item removed from database.',
             color: 'success'
           })
           await this.fetchProducts()
         } catch (error) {
-          this.$store.dispatch('ui/showSnackbar', {
-            message: 'Failed to delete product',
-            color: 'error'
-          })
+          this.$store.dispatch('ui/showSnackbar', { message: 'Deletion failed.', color: 'error' })
         }
       }
     },
@@ -419,12 +487,17 @@ export default {
       this.showAddDialog = false
       this.editingProduct = null
       this.selectedFiles = []
-      this.productForm = {
-        name: '',
-        description: '',
-        price: '',
-        stock: '',
-        categoryId: null
+      this.productForm = { name: '', description: '', price: '', stock: '', categoryId: null, active: true, featured: false }
+    },
+    handleFileUpload(e) {
+      this.selectedFiles = [...this.selectedFiles, ...Array.from(e.target.files)];
+    },
+    removeImage(index) {
+      if (this.editingProduct && this.editingProduct.images && index < this.editingProduct.images.length) {
+        this.editingProduct.images.splice(index, 1);
+      } else {
+        const fileIndex = index - (this.editingProduct?.images?.length || 0);
+        this.selectedFiles.splice(fileIndex, 1);
       }
     },
     getProductImage(product) {
@@ -435,272 +508,95 @@ export default {
         }
         return imageUrl
       }
-      return `https://via.placeholder.com/40x40/1976D2/FFFFFF?text=${encodeURIComponent(product.name.charAt(0))}`
+      return `https://via.placeholder.com/150/f1f5f9/64748b?text=NO+IMAGE`
     },
-    getFilePreview(file) {
-      return URL.createObjectURL(file)
-    },
-    removeFile(index) {
-      this.selectedFiles.splice(index, 1)
+    getStockColor(stock) {
+      if (stock === 0) return 'error'
+      if (stock < 10) return 'warning'
+      return 'success'
     }
   }
 }
 </script>
 
 <style scoped>
-.products-content {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-}
-
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 16px;
+.admin-products-view {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .page-title {
-  font-size: 2rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
+  letter-spacing: -2px;
 }
 
-.products-table {
-  border-radius: 16px;
-  overflow: hidden;
-}
+.gap-3 { gap: 12px; }
 
-/* Premium Dialog Styles */
-.premium-dialog {
-  border-radius: 24px !important;
-  overflow: hidden;
-}
-
-.dialog-header {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  padding: 32px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.dialog-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 300px;
-  height: 300px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  position: relative;
-  z-index: 1;
-}
-
-.header-icon {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  padding: 16px;
-  border-radius: 16px;
-}
-
-.dialog-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  margin: 0;
-  color: white;
-  line-height: 1.2;
-}
-
-.dialog-subtitle {
-  margin: 4px 0 0 0;
-  opacity: 0.9;
-  font-size: 0.95rem;
-}
-
-.dialog-content {
-  padding: 32px !important;
-  max-height: 600px;
-}
-
-.form-group {
-  margin-bottom: 24px;
-}
-
-.form-label {
-  display: block;
-  font-weight: 600;
-  color: #334155;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-}
-
-.modern-input {
-  margin-top: 0 !important;
-}
-
-.modern-input >>> .v-input__control > .v-input__slot {
-  border-color: rgba(14, 165, 233, 0.2) !important;
-}
-
-.modern-input >>> .v-input__control > .v-input__slot:hover {
-  border-color: rgba(14, 165, 233, 0.4) !important;
-}
-
-.modern-input.v-input--is-focused >>> .v-input__control > .v-input__slot {
-  border-color: rgba(14, 165, 233, 0.6) !important;
-}
-
-.upload-area {
-  border: 2px dashed rgba(14, 165, 233, 0.3);
-  border-radius: 16px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), rgba(118, 75, 162, 0.02));
-  transition: all 0.3s ease;
-}
-
-.upload-area:hover {
-  border-color: rgba(14, 165, 233, 0.5);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(118, 75, 162, 0.05));
-}
-
-.upload-input {
-  margin-bottom: 0;
-}
-
-.image-preview-container {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(14, 165, 233, 0.1);
-}
-
-.preview-label {
-  font-weight: 600;
-  color: #64748b;
-  margin-bottom: 16px;
-  font-size: 0.9rem;
-}
-
-.image-gallery {
-  margin: 0 -8px;
-}
-
-.gallery-item {
-  position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.gallery-item:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-}
-
-.preview-image {
-  border-radius: 16px;
-  border: 3px solid rgba(14, 165, 233, 0.2);
-}
-
-.remove-image-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.7) !important;
-  backdrop-filter: blur(10px);
-  z-index: 2;
-}
-
-.image-number {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  background: linear-gradient(135deg, #0ea5e9, #06b6d4);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-weight: 700;
+.section-label {
   font-size: 0.75rem;
-  z-index: 2;
+  font-weight: 900;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 2px;
 }
 
-.dialog-actions {
-  padding: 20px 32px !important;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), rgba(118, 75, 162, 0.02));
-  border-top: 1px solid rgba(14, 165, 233, 0.1);
+.border-light { border: 1px solid rgba(0,0,0,0.05) !important; }
+.soft-shadow { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04), 0 2px 4px -1px rgba(0,0,0,0.02) !important; }
+
+.premium-table >>> th {
+  background-color: #f8fafc !important;
+  color: #64748b !important;
+  text-transform: uppercase !important;
+  font-size: 0.7rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 1px;
+  height: 56px !important;
 }
 
-.cancel-btn {
-  text-transform: none;
-  font-weight: 600;
-  color: #64748b;
+.premium-table >>> td {
+  height: 80px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
 }
 
-.save-btn {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
-  color: white !important;
-  text-transform: none;
-  font-weight: 700;
-  letter-spacing: 0;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
+.premium-table >>> tr:hover {
+  background-color: rgba(14, 165, 233, 0.01) !important;
+}
+
+.bg-primary-light { background-color: rgba(14, 165, 233, 0.08) !important; }
+.bg-error-light { background-color: rgba(239, 68, 68, 0.08) !important; }
+
+/* Image Uploader Styles */
+.image-uploader {
+  min-height: 300px;
+  background-color: #f8fafc;
   transition: all 0.3s ease;
 }
 
-.save-btn:hover {
-  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.5);
-  transform: translateY(-2px);
+.border-dashed { border: 2px dashed #e2e8f0; }
+
+.image-uploader:hover {
+  border-color: #0ea5e9;
+  background-color: rgba(14, 165, 233, 0.02);
 }
 
-@media (max-width: 600px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
+.remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0,0,0,0.6) !important;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
 
-  .dialog-header {
-    padding: 24px;
-  }
+.stock-bar {
+  width: 100px;
+  opacity: 0.6;
+}
 
-  .header-content {
-    gap: 16px;
-  }
+.editor-dialog {
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25) !important;
+}
 
-  .dialog-title {
-    font-size: 1.5rem;
-  }
-
-  .dialog-content {
-    padding: 24px !important;
-  }
-
-  .dialog-actions {
-    padding: 16px 24px !important;
-    flex-wrap: wrap;
-  }
-
-  .cancel-btn,
-  .save-btn {
-    width: 100%;
-    margin: 4px 0 !important;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>

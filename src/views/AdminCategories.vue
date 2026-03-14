@@ -1,149 +1,148 @@
-﻿<template>
+<template>
   <AdminLayout>
-    <div class="categories-content">
-      <div class="page-header mb-6">
-        <h1 class="page-title">Category Management</h1>
-        <v-btn color="primary" large @click="showAddDialog = true">
-          <v-icon left>mdi-plus</v-icon>
-          Add New Category
-        </v-btn>
+    <div class="admin-categories-view">
+      <!-- Premium Page Header -->
+      <div class="page-header mb-10">
+        <v-row align="end" no-gutters>
+          <v-col cols="12" md="6">
+            <div class="d-flex align-center mb-2">
+              <v-btn icon color="primary" @click="$router.go(-1)" class="mr-2">
+                <v-icon>mdi-arrow-left</v-icon>
+              </v-btn>
+              <span class="text-overline font-weight-black primary--text letter-spacing-2">TAXONOMY CONTROL</span>
+            </div>
+            <h1 class="text-h3 font-weight-black mb-2">Collection Tags</h1>
+            <p class="grey--text text-subtitle-1 mb-0">Organize your offerings into meaningful clusters for optimized discovery.</p>
+          </v-col>
+          <v-col cols="12" md="6" class="text-md-right mt-6 mt-md-0">
+            <v-btn color="primary" x-large rounded elevation="8" class="px-8 font-weight-black" @click="showAddDialog = true">
+              <v-icon left size="24">mdi-shape-plus</v-icon> Define Category
+            </v-btn>
+          </v-col>
+        </v-row>
       </div>
 
-      <v-card class="categories-table">
-        <v-data-table
-          :headers="headers"
-          :items="categories"
-          :loading="loading"
-          class="elevation-0"
-        >
-          <template slot="item.image" slot-scope="{ item }">
-            <v-avatar size="40" class="ma-1">
-              <v-img v-if="item.image" :src="getCategoryImage(item)" />
-              <v-icon v-else color="grey">mdi-tag</v-icon>
+      <!-- Categories Grid/List -->
+      <v-row>
+        <v-col v-for="cat in categories" :key="cat.id" cols="12" sm="6" lg="4" xl="3">
+          <v-card class="category-card rounded-xl border-light soft-shadow h-100 overflow-hidden d-flex flex-column">
+            <v-img :src="getCategoryImage(cat)" height="180" class="grey lighten-4" cover>
+              <template v-slot:placeholder>
+                <v-row class="fill-height ma-0" align="center" justify="center">
+                  <v-icon size="48" color="grey lighten-2">mdi-folder-outline</v-icon>
+                </v-row>
+              </template>
+              <div class="d-flex align-center justify-end pa-4">
+                <v-btn fab x-small color="white" class="elevation-4 mr-2" @click="editCategory(cat)">
+                  <v-icon small color="primary">mdi-pencil</v-icon>
+                </v-btn>
+                <v-btn fab x-small color="white" class="elevation-4" @click="deleteCategory(cat.id)">
+                  <v-icon small color="error">mdi-trash-can-outline</v-icon>
+                </v-btn>
+              </div>
+            </v-img>
+            
+            <v-card-text class="pa-6 flex-grow-1">
+              <div class="text-h5 font-weight-black mb-2">{{ cat.name }}</div>
+              <p class="text-body-2 grey--text line-clamp-2 mb-4">{{ cat.description || 'No description provided for this collection.' }}</p>
+              
+              <div class="d-flex align-center">
+                <v-chip x-small color="primary" label class="font-weight-black px-2 mr-2">UID: {{ cat.id }}</v-chip>
+                <v-spacer />
+                <div class="text-caption font-weight-bold grey--text text-uppercase">{{ formatDate(cat.createdAt) }}</div>
+              </div>
+            </v-card-text>
+            
+            <v-divider />
+            <v-btn block text color="primary" class="font-weight-black py-6 rounded-0">
+              View Items in Collection
+            </v-btn>
+          </v-card>
+        </v-col>
+
+        <!-- Empty State / Add New Placeholder -->
+        <v-col cols="12" sm="6" lg="4" xl="3">
+          <v-card 
+            class="rounded-xl border-dashed h-100 d-flex flex-column align-center justify-center pa-10 cursor-pointer add-cat-placeholder"
+            @click="showAddDialog = true"
+            flat
+          >
+            <v-avatar color="primary lighten-5" size="80" class="mb-4">
+              <v-icon size="40" color="primary">mdi-plus</v-icon>
             </v-avatar>
-          </template>
-          <template slot="item.actions" slot-scope="{ item }">
-            <v-btn icon small @click="editCategory(item)">
-              <v-icon>mdi-pencil</v-icon>
-            </v-btn>
-            <v-btn icon small color="error" @click="deleteCategory(item.id)">
-              <v-icon>mdi-delete</v-icon>
-            </v-btn>
-          </template>
-        </v-data-table>
-      </v-card>
+            <div class="text-h6 font-weight-black mb-1">New Collection</div>
+            <div class="text-caption grey--text text-center">Add a new taxonomic group to your inventory flow.</div>
+          </v-card>
+        </v-col>
+      </v-row>
     </div>
 
-    <!-- Add/Edit Category Dialog -->
+    <!-- Category Editor Dialog -->
     <v-dialog v-model="showAddDialog" max-width="600px" persistent>
-      <v-card class="premium-dialog">
-        <div class="dialog-header">
-          <div class="header-content">
-            <v-icon large color="white" class="header-icon">mdi-tag</v-icon>
-            <div>
-              <h2 class="dialog-title">{{ editingCategory ? 'Edit Category' : 'Add New Category' }}</h2>
-              <p class="dialog-subtitle">{{ editingCategory ? 'Update category information' : 'Create a new product category' }}</p>
-            </div>
+      <v-card class="rounded-xl overflow-hidden">
+        <v-toolbar flat class="gradient-primary pa-4" height="100">
+          <v-icon large color="white" class="mr-6 bg-white-20 pa-4 rounded-xl">mdi-tag-outline</v-icon>
+          <div>
+            <div class="text-overline white--text opacity-80 mb-1">TAXONOMY DEFINITION</div>
+            <v-toolbar-title class="text-h5 font-weight-black white--text">{{ editingCategory ? 'Edit Collection' : 'Create Collection' }}</v-toolbar-title>
           </div>
-        </div>
+          <v-spacer />
+          <v-btn icon dark @click="closeDialog"><v-icon>mdi-close</v-icon></v-btn>
+        </v-toolbar>
 
-        <v-card-text class="dialog-content">
+        <v-card-text class="pa-8">
           <v-form ref="form">
-            <div class="form-group">
-              <label class="form-label">Category Name *</label>
-              <v-text-field
-                v-model="categoryForm.name"
-                placeholder="Enter category name"
-                outlined
-                dense
-                required
-                class="modern-input"
-              />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Description</label>
-              <v-textarea
-                v-model="categoryForm.description"
-                placeholder="Enter category description"
-                outlined
-                rows="3"
-                dense
-                class="modern-input"
-              />
-            </div>
+            <v-text-field
+              v-model="categoryForm.name"
+              label="Collection Name"
+              outlined
+              class="rounded-lg mb-4"
+              placeholder="e.g., Summer Essentials"
+            />
             
-            <!-- Image Upload -->
-            <div class="form-group">
-              <label class="form-label">Category Image (Optional)</label>
-              <div class="upload-area">
+            <v-textarea
+              v-model="categoryForm.description"
+              label="Narrative Description"
+              outlined
+              class="rounded-lg mb-6"
+              rows="3"
+            />
+
+            <!-- Image Hub -->
+            <div class="text-caption font-weight-black grey--text text-uppercase letter-spacing-2 mb-4">Collection Visual</div>
+            <div class="image-uploader-cat rounded-xl border-light pa-6 bg-grey-lightest d-flex align-center">
+              <v-avatar size="100" rounded="lg" class="mr-6 border shadow-sm">
+                <v-img :src="selectedFile ? getFilePreview(selectedFile) : getCategoryImage(editingCategory)" cover>
+                  <template v-slot:placeholder>
+                    <v-icon size="40" color="grey lighten-3">mdi-image-outline</v-icon>
+                  </template>
+                </v-img>
+              </v-avatar>
+              
+              <div class="flex-grow-1">
+                <div class="text-subtitle-2 font-weight-black mb-1">Cover Image</div>
+                <div class="text-caption grey--text mb-4">Update the thumbnail for this collection.</div>
                 <v-file-input
                   v-model="selectedFile"
                   accept="image/*"
                   outlined
                   dense
+                  hide-details
                   prepend-icon=""
-                  prepend-inner-icon="mdi-camera"
-                  placeholder="Click to select or drag and drop"
-                  show-size
-                  class="modern-input upload-input"
-                >
-                  <template v-slot:selection="{ text }">
-                    <v-chip small color="primary" label>
-                      <v-icon left small>mdi-image</v-icon>
-                      {{ text }}
-                    </v-chip>
-                  </template>
-                </v-file-input>
-                
-                <!-- Image Preview -->
-                <div v-if="selectedFile || (editingCategory && editingCategory.image)" class="image-preview-container">
-                  <div class="preview-label">Preview:</div>
-                  <div class="image-preview-wrapper">
-                    <v-img
-                      :src="selectedFile ? getFilePreview(selectedFile) : getCategoryImage(editingCategory)"
-                      height="160"
-                      width="160"
-                      contain
-                      class="preview-image"
-                    >
-                      <template v-slot:placeholder>
-                        <v-row class="fill-height ma-0" align="center" justify="center">
-                          <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
-                        </v-row>
-                      </template>
-                    </v-img>
-                    <v-btn
-                      v-if="selectedFile"
-                      icon
-                      small
-                      color="error"
-                      class="remove-image-btn"
-                      @click="selectedFile = null"
-                    >
-                      <v-icon small>mdi-close</v-icon>
-                    </v-btn>
-                  </div>
-                </div>
+                  prepend-inner-icon="mdi-camera-outline"
+                  placeholder="Change Image"
+                  class="rounded-lg"
+                />
               </div>
             </div>
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="dialog-actions">
-          <v-btn text large class="cancel-btn" @click="closeDialog">
-            <v-icon left>mdi-close</v-icon>
-            Cancel
-          </v-btn>
+        <v-card-actions class="pa-8 bg-white border-top">
+          <v-btn text large rounded class="px-8 font-weight-bold grey--text" @click="closeDialog">Discard</v-btn>
           <v-spacer />
-          <v-btn
-            large
-            class="save-btn"
-            :loading="saving"
-            @click="saveCategory"
-          >
-            <v-icon left>{{ editingCategory ? 'mdi-check' : 'mdi-plus' }}</v-icon>
-            {{ editingCategory ? 'Update Category' : 'Create Category' }}
+          <v-btn x-large color="primary" rounded elevation="12" class="px-10 font-weight-black" :loading="saving" @click="saveCategory">
+            {{ editingCategory ? 'Update Collection' : 'Create Collection' }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -156,9 +155,7 @@ import AdminLayout from '@/components/AdminLayout.vue'
 
 export default {
   name: 'AdminCategories',
-  components: {
-    AdminLayout
-  },
+  components: { AdminLayout },
   data() {
     return {
       showAddDialog: false,
@@ -166,17 +163,7 @@ export default {
       saving: false,
       loading: false,
       categories: [],
-      headers: [
-        { text: 'Image', value: 'image', sortable: false },
-        { text: 'Name', value: 'name' },
-        { text: 'Description', value: 'description' },
-        { text: 'Created', value: 'createdAt' },
-        { text: 'Actions', value: 'actions', sortable: false }
-      ],
-      categoryForm: {
-        name: '',
-        description: ''
-      },
+      categoryForm: { name: '', description: '' },
       selectedFile: null
     }
   },
@@ -190,35 +177,25 @@ export default {
         const response = await this.$http.get('/categories')
         this.categories = response.data || []
       } catch (error) {
-        this.$store.dispatch('ui/showSnackbar', {
-          message: 'Failed to fetch categories',
-          color: 'error'
-        })
+        this.$store.dispatch('ui/showSnackbar', { message: 'Cloud link failed.', color: 'error' })
       } finally {
         this.loading = false
       }
     },
     async saveCategory() {
       if (!this.categoryForm.name) return
-
       this.saving = true
       try {
         let requestData
         let headers = {}
-        
         if (this.selectedFile) {
-          // Use FormData when image is present
           requestData = new FormData()
           requestData.append('name', this.categoryForm.name)
           requestData.append('description', this.categoryForm.description || '')
           requestData.append('image', this.selectedFile)
           headers['Content-Type'] = 'multipart/form-data'
         } else {
-          // Use JSON when no image
-          requestData = {
-            name: this.categoryForm.name,
-            description: this.categoryForm.description || ''
-          }
+          requestData = { name: this.categoryForm.name, description: this.categoryForm.description || '' }
         }
 
         if (this.editingCategory) {
@@ -227,45 +204,29 @@ export default {
           await this.$http.post('/categories', requestData, { headers })
         }
 
-        this.$store.dispatch('ui/showSnackbar', {
-          message: `Category ${this.editingCategory ? 'updated' : 'created'} successfully!`,
-          color: 'success'
-        })
-        
+        this.$store.dispatch('ui/showSnackbar', { message: 'Taxonomy entry saved.', color: 'success' })
         this.closeDialog()
         await this.fetchCategories()
       } catch (error) {
-        this.$store.dispatch('ui/showSnackbar', {
-          message: 'Failed to save category',
-          color: 'error'
-        })
+        this.$store.dispatch('ui/showSnackbar', { message: 'Transaction error.', color: 'error' })
       } finally {
         this.saving = false
       }
     },
     editCategory(category) {
       this.editingCategory = category
-      this.categoryForm = {
-        name: category.name,
-        description: category.description || ''
-      }
+      this.categoryForm = { name: category.name, description: category.description || '' }
       this.selectedFile = null
       this.showAddDialog = true
     },
     async deleteCategory(id) {
-      if (confirm('Are you sure you want to delete this category?')) {
+      if (confirm('Permanently remove this collection? Products may lose their primary mapping.')) {
         try {
           await this.$http.delete(`/categories/${id}`)
-          this.$store.dispatch('ui/showSnackbar', {
-            message: 'Category deleted successfully!',
-            color: 'success'
-          })
+          this.$store.dispatch('ui/showSnackbar', { message: 'Collection deleted.', color: 'success' })
           await this.fetchCategories()
         } catch (error) {
-          this.$store.dispatch('ui/showSnackbar', {
-            message: 'Failed to delete category',
-            color: 'error'
-          })
+          this.$store.dispatch('ui/showSnackbar', { message: 'Action restricted.', color: 'error' })
         }
       }
     },
@@ -273,255 +234,70 @@ export default {
       this.showAddDialog = false
       this.editingCategory = null
       this.selectedFile = null
-      this.categoryForm = {
-        name: '',
-        description: ''
-      }
+      this.categoryForm = { name: '', description: '' }
     },
     getCategoryImage(category) {
-      if (!category.image) return ''
-      if (category.image.startsWith('/uploads/')) {
-        return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${category.image}`
+      if (category?.image) {
+        if (category.image.startsWith('/uploads/')) {
+          return `${process.env.VUE_APP_API_URL || 'http://localhost:3000'}${category.image}`
+        }
+        return category.image
       }
-      return category.image
+      return ''
     },
-    getFilePreview(file) {
-      return URL.createObjectURL(file)
-    }
+    getFilePreview(file) { return URL.createObjectURL(file) },
+    formatDate(date) { return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) }
   }
 }
 </script>
 
 <style scoped>
-.categories-content {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  padding: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+.admin-categories-view {
+  animation: fadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-  gap: 16px;
+.category-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.page-title {
-  font-size: 2rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
+.category-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
 }
 
-.categories-table {
-  border-radius: 16px;
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* Premium Dialog Styles */
-.premium-dialog {
-  border-radius: 24px !important;
-  overflow: hidden;
-}
+.border-light { border: 1px solid rgba(0,0,0,0.06) !important; }
+.soft-shadow { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04) !important; }
+.border-dashed { border: 2px dashed #cbd5e1 !important; }
 
-.dialog-header {
-  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-  padding: 32px;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.dialog-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 300px;
-  height: 300px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-}
-
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  position: relative;
-  z-index: 1;
-}
-
-.header-icon {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  padding: 16px;
-  border-radius: 16px;
-}
-
-.dialog-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  margin: 0;
-  color: white;
-  line-height: 1.2;
-}
-
-.dialog-subtitle {
-  margin: 4px 0 0 0;
-  opacity: 0.9;
-  font-size: 0.95rem;
-}
-
-.dialog-content {
-  padding: 32px !important;
-}
-
-.form-group {
-  margin-bottom: 24px;
-}
-
-.form-label {
-  display: block;
-  font-weight: 600;
-  color: #334155;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
-}
-
-.modern-input {
-  margin-top: 0 !important;
-}
-
-.modern-input >>> .v-input__control > .v-input__slot {
-  border-color: rgba(14, 165, 233, 0.2) !important;
-}
-
-.modern-input >>> .v-input__control > .v-input__slot:hover {
-  border-color: rgba(14, 165, 233, 0.4) !important;
-}
-
-.modern-input.v-input--is-focused >>> .v-input__control > .v-input__slot {
-  border-color: rgba(14, 165, 233, 0.6) !important;
-}
-
-.upload-area {
-  border: 2px dashed rgba(14, 165, 233, 0.3);
-  border-radius: 16px;
-  padding: 20px;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), rgba(118, 75, 162, 0.02));
+.add-cat-placeholder {
   transition: all 0.3s ease;
+  background-color: rgba(14, 165, 233, 0.02) !important;
 }
 
-.upload-area:hover {
-  border-color: rgba(14, 165, 233, 0.5);
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(118, 75, 162, 0.05));
+.add-cat-placeholder:hover {
+  border-color: #0ea5e9 !important;
+  background-color: rgba(14, 165, 233, 0.04) !important;
 }
 
-.upload-input {
-  margin-bottom: 0;
-}
-
-.image-preview-container {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(14, 165, 233, 0.1);
-}
-
-.preview-label {
-  font-weight: 600;
-  color: #64748b;
-  margin-bottom: 12px;
-  font-size: 0.9rem;
-}
-
-.image-preview-wrapper {
-  position: relative;
-  display: inline-block;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-.preview-image {
-  border-radius: 16px;
-  border: 3px solid rgba(14, 165, 233, 0.2);
-}
-
-.remove-image-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(0, 0, 0, 0.6) !important;
-  backdrop-filter: blur(10px);
-}
-
-.dialog-actions {
-  padding: 20px 32px !important;
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.02), rgba(118, 75, 162, 0.02));
-  border-top: 1px solid rgba(14, 165, 233, 0.1);
-}
-
-.cancel-btn {
-  text-transform: none;
-  font-weight: 600;
-  color: #64748b;
-}
-
-.save-btn {
+.gradient-primary {
   background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%) !important;
-  color: white !important;
-  text-transform: none;
-  font-weight: 700;
-  letter-spacing: 0;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
-  transition: all 0.3s ease;
 }
 
-.save-btn:hover {
-  box-shadow: 0 6px 24px rgba(14, 165, 233, 0.5);
-  transform: translateY(-2px);
-}
+.bg-white-20 { background-color: rgba(255, 255, 255, 0.2) !important; }
+.bg-grey-lightest { background-color: #f8fafc !important; }
 
-@media (max-width: 600px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
+.shadow-sm { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important; }
+.letter-spacing-2 { letter-spacing: 2px; }
 
-  .dialog-header {
-    padding: 24px;
-  }
-
-  .header-content {
-    gap: 16px;
-  }
-
-  .dialog-title {
-    font-size: 1.5rem;
-  }
-
-  .dialog-content {
-    padding: 24px !important;
-  }
-
-  .dialog-actions {
-    padding: 16px 24px !important;
-    flex-wrap: wrap;
-  }
-
-  .cancel-btn,
-  .save-btn {
-    width: 100%;
-    margin: 4px 0 !important;
-  }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
