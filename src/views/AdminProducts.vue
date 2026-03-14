@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <AdminLayout>
     <div class="products-content">
       <div class="page-header mb-6">
@@ -323,7 +323,7 @@ export default {
       this.loading = true
       try {
         const response = await this.$http.get('/products', {
-          params: { limit: 100 }
+          params: { limit: 100, includeNoImage: true }
         })
         this.products = response.data?.products || []
       } catch (error) {
@@ -341,30 +341,32 @@ export default {
 
       this.saving = true
       try {
-        const formData = new FormData()
+        const productData = {
+          name: this.productForm.name,
+          description: this.productForm.description,
+          price: parseFloat(this.productForm.price),
+          stock: parseInt(this.productForm.stock),
+          categoryId: parseInt(this.productForm.categoryId),
+          images: this.editingProduct ? [...this.editingProduct.images] : []
+        }
         
-        // Add product data
-        formData.append('name', this.productForm.name)
-        formData.append('description', this.productForm.description)
-        formData.append('price', this.productForm.price)
-        formData.append('stock', this.productForm.stock)
-        formData.append('categoryId', this.productForm.categoryId)
-        
-        // Add images
+        // Convert new images to Base64
         if (this.selectedFiles && this.selectedFiles.length > 0) {
-          this.selectedFiles.forEach(file => {
-            formData.append('images', file)
-          })
+          const base64Promises = this.selectedFiles.map(file => {
+            return new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = () => resolve(reader.result);
+            });
+          });
+          const base64Images = await Promise.all(base64Promises);
+          productData.images = base64Images;
         }
 
         if (this.editingProduct) {
-          await this.$http.patch(`/products/${this.editingProduct.id}`, formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          })
+          await this.$http.put(`/products/${this.editingProduct.id}`, productData)
         } else {
-          await this.$http.post('/products', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-          })
+          await this.$http.post('/products', productData)
         }
 
         this.$store.dispatch('ui/showSnackbar', {
@@ -375,6 +377,7 @@ export default {
         this.closeDialog()
         await this.fetchProducts()
       } catch (error) {
+        console.error('Save product error:', error)
         this.$store.dispatch('ui/showSnackbar', {
           message: 'Failed to save product',
           color: 'error'

@@ -99,6 +99,8 @@
                         :type="showPassword ? 'text' : 'password'"
                         outlined
                         dense
+                        persistent-hint
+                        hint="Min 8 chars: Upper, Lower, Num, Special"
                         :error-messages="errors"
                         class="modern-input"
                       >

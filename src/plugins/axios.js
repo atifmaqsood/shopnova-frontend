@@ -1,60 +1,83 @@
 import Vue from 'vue'
-import axios from 'axios'
+import { mockApiService } from '@/services/mockApiService'
 import store from '../store'
-import router from '../router'
 
-// Create axios instance
-const apiClient = axios.create({
-  baseURL: process.env.VUE_APP_API_URL || 'http://localhost:3000',
-  timeout: 10000,
-})
-
-// Request interceptor
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = store.getters['auth/token']
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+// Mock Axios implementation
+const mockClient = {
+  get(url, config = {}) {
+    console.log(`Mock GET: ${url}`, config);
+    if (url.includes('/products')) {
+      if (url.match(/\/products\/\d+/)) {
+        const id = url.split('/').pop();
+        return mockApiService.getProduct(id).then(data => ({ data }));
+      }
+      return mockApiService.getProducts(config.params).then(products => ({ data: { products } }));
     }
-    store.dispatch('ui/setLoading', true)
-    return config
+    if (url.includes('/categories')) {
+      return mockApiService.getCategories().then(categories => ({ data: categories }));
+    }
+    if (url.includes('/orders')) {
+      return mockApiService.getOrders().then(orders => ({ data: { orders } }));
+    }
+    if (url.includes('/admin/dashboard')) {
+      return mockApiService.getDashboardStats().then(data => ({ data }));
+    }
+    if (url.includes('/admin/users')) {
+      return mockApiService.getCustomers().then(users => ({ data: { users } }));
+    }
+    if (url.includes('/orders/')) {
+      const id = url.split('/').pop();
+      return mockApiService.getOrder(id).then(order => ({ data: order }));
+    }
+    return Promise.resolve({ data: {} });
   },
-  (error) => {
-    store.dispatch('ui/setLoading', false)
-    return Promise.reject(error)
-  }
-)
-
-// Response interceptor
-apiClient.interceptors.response.use(
-  (response) => {
-    store.dispatch('ui/setLoading', false)
-    return response.data
+  post(url, data, config = {}) {
+    console.log(`Mock POST: ${url}`, data);
+    if (url.includes('/auth/login')) {
+      const role = data.email.includes('admin') ? 'admin' : 'user';
+      return Promise.resolve({
+        data: {
+          user: { id: 1, email: data.email, name: 'Demo User', role },
+          token: 'mock-token'
+        }
+      });
+    }
+    if (url.includes('/orders')) {
+      return mockApiService.createOrder(data).then(order => ({ data: order }));
+    }
+    if (url.includes('/payment/create-payment-intent')) {
+      return Promise.resolve({
+        data: { clientSecret: 'mock_secret_' + Date.now() }
+      });
+    }
+    return Promise.resolve({ data: {} });
   },
-  (error) => {
-    store.dispatch('ui/setLoading', false)
-    
-    if (error.response?.status === 401) {
-      store.dispatch('auth/logout')
-      router.push('/login')
-      return Promise.reject(error)
+  patch(url, data) {
+    console.log(`Mock PATCH: ${url}`, data);
+    if (url.includes('/orders/') && url.includes('/status')) {
+      const parts = url.split('/');
+      const id = parts[parts.length - 2];
+      return mockApiService.updateOrderStatus(id, data.status).then(order => ({ data: order }));
     }
-    
-    let message = 'An error occurred'
-    if (error.code === 'NETWORK_ERROR' || !error.response) {
-      message = 'Unable to connect to server. Please check your connection.'
-    } else {
-      message = error.response?.data?.message || 'An error occurred'
+    if (url.match(/\/products\/\d+/)) {
+      const id = url.split('/').pop();
+      return mockApiService.updateProduct(id, data).then(product => ({ data: product }));
     }
-    
-    // Only show error snackbar for user-initiated actions, not background requests
-    if (!error.config?.silent) {
-      store.dispatch('ui/showSnackbar', { message, color: 'error' })
+    return Promise.resolve({ data: {} });
+  },
+  put(url, data) {
+    if (url.match(/\/products\/\d+/)) {
+      const id = url.split('/').pop();
+      return mockApiService.updateProduct(id, data).then(product => ({ data: product }));
     }
-    
-    return Promise.reject(error)
+    return Promise.resolve({ data: {} });
+  },
+  delete(url) { return Promise.resolve({ data: {} }); },
+  interceptors: {
+    request: { use: () => {} },
+    response: { use: () => {} }
   }
-)
+};
 
-Vue.prototype.$http = apiClient
-export default apiClient
+Vue.prototype.$http = mockClient;
+export default mockClient;

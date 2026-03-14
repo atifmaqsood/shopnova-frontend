@@ -33,7 +33,8 @@ extend('phone', {
 
 extend('strong_password', {
   validate: (value) => {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(value)
+    // Requires: 8+ chars, 1 uppercase, 1 lowercase, 1 number, 1 special char (including #)
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[#@$!%*?&])[A-Za-z\d#@$!%*?&]{8,}$/.test(value)
   },
   message: 'Password must be at least 8 characters with uppercase, lowercase, number and special character',
 })

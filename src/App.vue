@@ -15,6 +15,15 @@
     </template>
     <AppSnackbar />
     <AppLoader />
+
+    <!-- Demo Mode Indicator -->
+    <div class="demo-mode-badge" v-if="!isAdminRoute">
+      <v-icon color="white" small>mdi-information-outline</v-icon>
+      <span>Demo Mode: Frontend-only</span>
+      <v-btn x-small text color="white" class="ml-2 font-weight-bold" @click="resetDemoData">
+        Reset Data
+      </v-btn>
+    </div>
   </v-app>
 </template>
 
@@ -47,11 +56,15 @@ export default {
       await this.$store.dispatch('categories/fetchCategories')
     } catch (error) {
       console.warn('App initialization error:', error.message)
-      this.$store.dispatch('ui/showSnackbar', {
-        message: 'Unable to connect to server. Please check if the backend is running.',
-        color: 'warning',
-        timeout: 8000
-      })
+    }
+  },
+  methods: {
+    async resetDemoData() {
+      if (confirm('Are you sure you want to reset all demo data? This will restore initial products and categories.')) {
+        const { mockApiService } = await import('./services/mockApiService');
+        mockApiService.resetData();
+        window.location.reload();
+      }
     }
   }
 }

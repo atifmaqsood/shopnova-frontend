@@ -100,7 +100,7 @@
         <!-- Action Buttons -->
         <div class="d-flex align-center ml-2">
           <!-- Cart -->
-          <v-btn icon class="mx-1" @click="$router.push('/cart')" v-if="isAuthenticated">
+          <v-btn icon class="mx-1" @click="$store.dispatch('ui/toggleCartDrawer')">
             <v-badge :content="cartItemCount" :value="cartItemCount > 0" color="red" overlap>
               <v-icon>mdi-cart-outline</v-icon>
             </v-badge>
@@ -237,14 +237,21 @@
         <v-divider class="my-2" v-if="isAuthenticated" />
       </v-list>
     </v-navigation-drawer>
+
+    <!-- Cart Drawer -->
+    <CartDrawer />
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import CartDrawer from '../cart/CartDrawer.vue'
 
 export default {
   name: 'AppNavigation',
+  components: {
+    CartDrawer
+  },
   data() {
     return {
       searchQuery: ''

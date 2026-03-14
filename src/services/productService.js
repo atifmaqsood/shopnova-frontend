@@ -1,19 +1,24 @@
-import apiClient from './apiClient'
+import { mockApiService } from './mockApiService'
 
 export default {
-  getProducts(params = {}) {
-    return apiClient.get('/products', { params })
+  async getProducts(params = {}) {
+    const products = await mockApiService.getProducts(params)
+    return { data: { products } }
   },
 
-  getProduct(id) {
-    return apiClient.get(`/products/${id}`)
+  async getProduct(id) {
+    const product = await mockApiService.getProduct(id)
+    return { data: product }
   },
 
-  getCategories() {
-    return apiClient.get('/categories')
+  async getCategories() {
+    const categories = await mockApiService.getCategories()
+    return { data: categories }
   },
 
-  getCategory(id) {
-    return apiClient.get(`/categories/${id}`)
+  async getCategory(id) {
+    const categories = await mockApiService.getCategories()
+    const category = categories.find(c => c.id === parseInt(id))
+    return { data: category }
   }
 }

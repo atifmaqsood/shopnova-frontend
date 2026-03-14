@@ -1,31 +1,48 @@
-import apiClient from './apiClient'
+const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default {
-  register(userData) {
-    return apiClient.post('/auth/register', userData)
+  async register(userData) {
+    await delay();
+    return { 
+      data: { 
+        user: { ...userData, id: Date.now(), role: 'user' },
+        token: 'mock-jwt-token-' + Date.now()
+      } 
+    }
   },
 
-  login(credentials) {
-    return apiClient.post('/auth/login', credentials)
+  async login(credentials) {
+    await delay();
+    // Simulate admin login
+    const role = credentials.email.includes('admin') ? 'admin' : 'user';
+    return { 
+      data: { 
+        user: { 
+          id: 1, 
+          email: credentials.email, 
+          name: credentials.email.split('@')[0], 
+          role: role 
+        },
+        token: 'mock-jwt-token-' + Date.now()
+      } 
+    }
   },
 
-  verifyEmail(data) {
-    return apiClient.post('/auth/verify-email', data)
+  async verifyEmail(data) {
+    await delay();
+    return { data: { message: 'Email verified successfully' } }
   },
 
-  resendOtp(email) {
-    return apiClient.post('/auth/resend-otp', { email })
+  async getProfile() {
+    await delay();
+    return { 
+      data: { 
+        user: { id: 1, email: 'user@example.com', name: 'Demo User', role: 'admin' }
+      } 
+    }
   },
 
-  forgotPassword(email) {
-    return apiClient.post('/auth/forgot-password', { email })
-  },
-
-  resetPassword(data) {
-    return apiClient.post('/auth/reset-password', data)
-  },
-
-  getProfile() {
-    return apiClient.get('/auth/profile')
-  }
+  async resendOtp(email) { await delay(); return { data: {} } },
+  async forgotPassword(email) { await delay(); return { data: {} } },
+  async resetPassword(data) { await delay(); return { data: {} } }
 }

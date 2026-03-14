@@ -1,15 +1,18 @@
-import apiClient from './apiClient'
+import { mockApiService } from './mockApiService'
 
 export default {
-  createOrder(data) {
-    return apiClient.post('/orders', data)
+  async createOrder(data) {
+    const order = await mockApiService.createOrder(data)
+    return { data: order }
   },
 
-  getOrders(params = {}) {
-    return apiClient.get('/orders/my-orders', { params })
+  async getOrders(params = {}) {
+    const orders = await mockApiService.getOrders()
+    return { data: { orders } }
   },
 
-  getOrder(id) {
-    return apiClient.get(`/orders/${id}`)
+  async getOrder(id) {
+    const order = await mockApiService.getOrder(id)
+    return { data: order }
   }
 }

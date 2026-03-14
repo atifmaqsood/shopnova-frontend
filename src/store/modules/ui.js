@@ -7,6 +7,7 @@ const state = {
     timeout: 4000
   },
   drawer: false,
+  cartDrawer: false,
   darkMode: localStorage.getItem('darkMode') === 'true'
 }
 
@@ -14,6 +15,7 @@ const getters = {
   loading: state => state.loading,
   snackbar: state => state.snackbar,
   drawer: state => state.drawer,
+  cartDrawer: state => state.cartDrawer,
   darkMode: state => state.darkMode
 }
 
@@ -26,6 +28,9 @@ const mutations = {
   },
   SET_DRAWER(state, drawer) {
     state.drawer = drawer
+  },
+  SET_CART_DRAWER(state, drawer) {
+    state.cartDrawer = drawer
   },
   SET_DARK_MODE(state, darkMode) {
     state.darkMode = darkMode
@@ -48,6 +53,12 @@ const actions = {
   },
   toggleDarkMode({ commit, state }) {
     commit('SET_DARK_MODE', !state.darkMode)
+  },
+  setCartDrawer({ commit }, value) {
+    commit('SET_CART_DRAWER', value)
+  },
+  toggleCartDrawer({ commit, state }) {
+    commit('SET_CART_DRAWER', !state.cartDrawer)
   }
 }
 

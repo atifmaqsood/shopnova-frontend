@@ -69,6 +69,9 @@ const actions = {
   applyFiltersAndSort({ commit, state }) {
     let filtered = [...state.allProducts]
 
+    // Mandatory: Filter out products without images for storefront
+    filtered = filtered.filter(p => p.images && p.images.length > 0 && p.images[0])
+
     // Apply search filter
     if (state.filters.search) {
       const searchLower = state.filters.search.toLowerCase()

@@ -41,7 +41,7 @@
                 <ValidationProvider
                   v-slot="{ errors }"
                   name="password"
-                  rules="required|min:6"
+                  rules="required|min:8"
                 >
                   <div class="form-group">
                     <label class="form-label">Password</label>
@@ -51,6 +51,8 @@
                       :type="showPassword ? 'text' : 'password'"
                       outlined
                       dense
+                      persistent-hint
+                      hint="Min 8 characters required"
                       :error-messages="errors"
                       class="modern-input"
                     >

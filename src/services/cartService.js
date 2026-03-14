@@ -1,23 +1,43 @@
-import apiClient from './apiClient'
+import { mockApiService } from './mockApiService'
 
 export default {
-  getCart() {
-    return apiClient.get('/cart')
+  async getCart() {
+    const cart = await mockApiService.getCart()
+    return { data: cart }
   },
 
-  addToCart(data) {
-    return apiClient.post('/cart/add', data)
+  async addToCart(data) {
+    const cart = await mockApiService.getCart()
+    const existingItem = cart.items.find(item => item.productId === data.productId)
+    if (existingItem) {
+      existingItem.quantity += data.quantity
+    } else {
+      cart.items.push(data)
+    }
+    await mockApiService.updateCart(cart)
+    return { data: cart }
   },
 
-  updateCartItem(itemId, data) {
-    return apiClient.patch(`/cart/items/${itemId}`, data)
+  async updateCartItem(productId, data) {
+    const cart = await mockApiService.getCart()
+    const item = cart.items.find(item => item.productId === productId)
+    if (item) {
+      item.quantity = data.quantity
+    }
+    await mockApiService.updateCart(cart)
+    return { data: cart }
   },
 
-  removeFromCart(itemId) {
-    return apiClient.delete(`/cart/items/${itemId}`)
+  async removeFromCart(productId) {
+    const cart = await mockApiService.getCart()
+    cart.items = cart.items.filter(item => item.productId !== productId)
+    await mockApiService.updateCart(cart)
+    return { data: cart }
   },
 
-  clearCart() {
-    return apiClient.delete('/cart/clear')
+  async clearCart() {
+    const cart = { items: [], total: 0 }
+    await mockApiService.updateCart(cart)
+    return { data: cart }
   }
 }

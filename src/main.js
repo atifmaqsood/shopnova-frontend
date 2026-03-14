@@ -5,6 +5,7 @@ import store from './store'
 import vuetify from './plugins/vuetify'
 import './plugins/vee-validate'
 import './plugins/axios'
+import './assets/styles/modern-saas.css'
 
 Vue.config.productionTip = false
 
