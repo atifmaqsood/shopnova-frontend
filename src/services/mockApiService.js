@@ -9,8 +9,21 @@ const STORAGE_KEYS = {
   ORDERS: 'shopnova_orders',
   CUSTOMERS: 'shopnova_customers',
   CART: 'shopnova_cart',
-  REVIEWS: 'shopnova_reviews'
+  REVIEWS: 'shopnova_reviews',
+  ADDRESSES: 'shopnova_addresses'
 };
+
+const INITIAL_ADDRESSES = [
+  {
+    id: 1,
+    street: '123 Tech Avenue',
+    city: 'San Francisco',
+    state: 'CA',
+    zipCode: '94105',
+    country: 'USA',
+    isDefault: true
+  }
+];
 
 const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -34,6 +47,9 @@ class MockApiService {
     }
     if (force || !localStorage.getItem(STORAGE_KEYS.REVIEWS)) {
       localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify([]));
+    }
+    if (force || !localStorage.getItem(STORAGE_KEYS.ADDRESSES)) {
+      localStorage.setItem(STORAGE_KEYS.ADDRESSES, JSON.stringify(INITIAL_ADDRESSES));
     }
   }
 
@@ -205,6 +221,21 @@ class MockApiService {
     await delay();
     localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(cart));
     return cart;
+  }
+
+  // --- Addresses ---
+  async getAddresses() {
+    await delay();
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.ADDRESSES)) || [];
+  }
+
+  async createAddress(address) {
+    await delay();
+    const addresses = await this.getAddresses();
+    const newAddress = { ...address, id: Date.now() };
+    addresses.push(newAddress);
+    localStorage.setItem(STORAGE_KEYS.ADDRESSES, JSON.stringify(addresses));
+    return newAddress;
   }
 
   // --- Dashboard Stats ---

@@ -39,20 +39,24 @@ const mutations = {
 import socketService from '@/services/socket'
 
 const actions = {
-  async register({ commit }, userData) {
+  async register({ commit, dispatch }, userData) {
     const response = await authService.register(userData)
+    const { token, user } = response.data
+    commit('SET_TOKEN', token)
+    commit('SET_USER', user)
+    socketService.connect(token)
     return response
   },
 
   async login({ commit, dispatch }, credentials) {
     const response = await authService.login(credentials)
-    const { access_token, user } = response.data
+    const { token, user } = response.data
 
-    commit('SET_TOKEN', access_token)
+    commit('SET_TOKEN', token)
     commit('SET_USER', user)
 
     // Initialize socket connection
-    socketService.connect(access_token)
+    socketService.connect(token)
 
     // Initialize user data
     await dispatch('cart/fetchCart', null, { root: true })

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <v-container class="cart-container py-8">
     <!-- Page Header -->
     <div class="page-header mb-8">
@@ -18,13 +18,13 @@
           </div>
 
           <div class="cart-items-list">
-            <div v-for="(item, index) in items" :key="item.id" class="cart-item">
+            <div v-for="(item, index) in items" :key="item.productId" class="cart-item">
               <v-row align="center" no-gutters>
                 <!-- Product Image -->
                 <v-col cols="12" sm="2" class="text-center">
                   <div class="product-image-wrapper">
                     <v-img
-                      :src="getProductImage(item.product)"
+                      :src="item.image"
                       height="100"
                       width="100"
                       class="product-image"
@@ -35,13 +35,13 @@
 
                 <!-- Product Details -->
                 <v-col cols="12" sm="4" class="px-4">
-                  <h3 class="product-name">{{ item.product.name }}</h3>
+                  <h3 class="product-name">{{ item.name }}</h3>
                   <p class="product-category">
                     <v-icon small color="#64748b">mdi-tag</v-icon>
-                    {{ item.product.category.name }}
+                    {{ item.category || 'Premium Item' }}
                   </p>
                   <div class="product-price">
-                    ${{ item.product.price.toFixed(2) }}
+                    ${{ item.price.toFixed(2) }}
                   </div>
                 </v-col>
 
@@ -54,7 +54,7 @@
                         icon
                         small
                         class="quantity-btn"
-                        @click="updateQuantity(item.id, item.quantity - 1)"
+                        @click="updateQuantity(item.productId, item.quantity - 1)"
                         :disabled="item.quantity <= 1"
                       >
                         <v-icon small>mdi-minus</v-icon>
@@ -63,16 +63,16 @@
                         type="number"
                         :value="item.quantity"
                         min="1"
-                        :max="item.product.stock"
+                        :max="20"
                         class="quantity-input"
-                        @change="updateQuantity(item.id, $event.target.value)"
+                        @change="updateQuantity(item.productId, $event.target.value)"
                       />
                       <v-btn
                         icon
                         small
                         class="quantity-btn"
-                        @click="updateQuantity(item.id, item.quantity + 1)"
-                        :disabled="item.quantity >= item.product.stock"
+                        @click="updateQuantity(item.productId, item.quantity + 1)"
+                        :disabled="item.quantity >= (item.stock || 99)"
                       >
                         <v-icon small>mdi-plus</v-icon>
                       </v-btn>
@@ -83,7 +83,7 @@
                 <!-- Item Total -->
                 <v-col cols="12" sm="2" class="text-center">
                   <div class="item-total">
-                    ${{ (item.product.price * item.quantity).toFixed(2) }}
+                    ${{ (item.price * item.quantity).toFixed(2) }}
                   </div>
                 </v-col>
 
@@ -92,7 +92,7 @@
                   <v-btn
                     icon
                     color="error"
-                    @click="removeItem(item.id)"
+                    @click="removeItem(item.productId)"
                     class="remove-btn"
                   >
                     <v-icon>mdi-delete-outline</v-icon>
@@ -221,17 +221,17 @@ export default {
     this.$store.dispatch('cart/fetchCart')
   },
   methods: {
-    async updateQuantity(itemId, quantity) {
+    async updateQuantity(productId, quantity) {
       const qty = parseInt(quantity)
       if (qty > 0) {
         await this.$store.dispatch('cart/updateCartItem', {
-          itemId,
+          productId,
           quantity: qty
         })
       }
     },
-    async removeItem(itemId) {
-      await this.$store.dispatch('cart/removeFromCart', itemId)
+    async removeItem(productId) {
+      await this.$store.dispatch('cart/removeFromCart', productId)
       this.$store.dispatch('ui/showSnackbar', {
         message: 'Item removed from cart',
         color: 'info'

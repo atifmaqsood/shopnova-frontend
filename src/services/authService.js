@@ -1,31 +1,49 @@
 const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms));
 
+const USERS_KEY = 'shopnova_users_list';
+const CURRENT_USER_KEY = 'shopnova_current_user';
+
 export default {
   async register(userData) {
     await delay();
-    return { 
-      data: { 
-        user: { ...userData, id: Date.now(), role: 'user' },
-        token: 'mock-jwt-token-' + Date.now()
-      } 
-    }
+    const users = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+    const newUser = { 
+      ...userData, 
+      id: Date.now(), 
+      role: userData.email.includes('admin') ? 'ADMIN' : 'USER' 
+    };
+    users.push(newUser);
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    
+    const response = { 
+      user: newUser,
+      token: 'mock-jwt-token-' + Date.now()
+    };
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(response.user));
+    return { data: response };
   },
 
   async login(credentials) {
     await delay();
-    // Simulate admin login
-    const role = credentials.email.includes('admin') ? 'admin' : 'user';
-    return { 
-      data: { 
-        user: { 
-          id: 1, 
-          email: credentials.email, 
-          name: credentials.email.split('@')[0], 
-          role: role 
-        },
-        token: 'mock-jwt-token-' + Date.now()
-      } 
+    const users = JSON.parse(localStorage.getItem(USERS_KEY)) || [];
+    let user = users.find(u => u.email === credentials.email);
+    
+    if (!user) {
+      // Create a default user if not found for demo purposes
+      user = { 
+        id: 1, 
+        email: credentials.email, 
+        name: credentials.email.split('@')[0], 
+        role: credentials.email.includes('admin') ? 'ADMIN' : 'USER' 
+      };
     }
+
+    const response = { 
+      user: user,
+      token: 'mock-jwt-token-' + Date.now()
+    };
+    localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(response.user));
+    return { data: response };
   },
 
   async verifyEmail(data) {
@@ -35,11 +53,9 @@ export default {
 
   async getProfile() {
     await delay();
-    return { 
-      data: { 
-        user: { id: 1, email: 'user@example.com', name: 'Demo User', role: 'admin' }
-      } 
-    }
+    const user = JSON.parse(localStorage.getItem(CURRENT_USER_KEY));
+    if (!user) throw new Error('Not authenticated');
+    return { data: user };
   },
 
   async resendOtp(email) { await delay(); return { data: {} } },

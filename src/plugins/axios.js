@@ -16,7 +16,7 @@ const mockClient = {
     if (url.includes('/categories')) {
       return mockApiService.getCategories().then(categories => ({ data: categories }));
     }
-    if (url.includes('/orders')) {
+    if (url.includes('/orders/my-orders')) {
       return mockApiService.getOrders().then(orders => ({ data: { orders } }));
     }
     if (url.includes('/admin/dashboard')) {
@@ -25,20 +25,32 @@ const mockClient = {
     if (url.includes('/admin/users')) {
       return mockApiService.getCustomers().then(users => ({ data: { users } }));
     }
-    if (url.includes('/orders/')) {
+    if (url.includes('/orders/') || url.match(/\/orders\/\d+/)) {
       const id = url.split('/').pop();
       return mockApiService.getOrder(id).then(order => ({ data: order }));
+    }
+    if (url.includes('/orders')) {
+      return mockApiService.getOrders().then(orders => ({ data: { orders } }));
+    }
+    if (url.includes('/addresses')) {
+      return mockApiService.getAddresses().then(addresses => ({ data: addresses }));
+    }
+    if (url.includes('/notifications/unread-count')) {
+      return Promise.resolve({ data: { unreadCount: 3 } });
+    }
+    if (url.includes('/notifications')) {
+      return Promise.resolve({ data: { notifications: [], pagination: { total: 0 } } });
     }
     return Promise.resolve({ data: {} });
   },
   post(url, data, config = {}) {
     console.log(`Mock POST: ${url}`, data);
     if (url.includes('/auth/login')) {
-      const role = data.email.includes('admin') ? 'admin' : 'user';
+      const role = data.email.includes('admin') ? 'ADMIN' : 'USER';
       return Promise.resolve({
         data: {
           user: { id: 1, email: data.email, name: 'Demo User', role },
-          token: 'mock-token'
+          token: 'mock-token-' + Date.now()
         }
       });
     }
@@ -69,6 +81,9 @@ const mockClient = {
     if (url.match(/\/products\/\d+/)) {
       const id = url.split('/').pop();
       return mockApiService.updateProduct(id, data).then(product => ({ data: product }));
+    }
+    if (url.includes('/users/profile')) {
+      return Promise.resolve({ data: { message: 'Profile updated' } });
     }
     return Promise.resolve({ data: {} });
   },

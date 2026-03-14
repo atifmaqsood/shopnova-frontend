@@ -39,7 +39,7 @@
                     <v-icon small>mdi-minus</v-icon>
                   </v-btn>
                   <span class="mx-3 font-weight-bold">{{ item.quantity }}</span>
-                  <v-btn icon x-small outlined @click="updateQty(item.productId, item.quantity + 1)">
+                  <v-btn icon x-small outlined @click="updateQty(item.productId, item.quantity + 1)" :disabled="item.quantity >= (item.stock || 99)">
                     <v-icon small>mdi-plus</v-icon>
                   </v-btn>
                 </div>

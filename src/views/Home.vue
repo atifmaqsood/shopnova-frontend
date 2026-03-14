@@ -1,43 +1,63 @@
 <template>
   <div class="home-page">
     <!-- Hero Section -->
-    <section class="hero-section">
+    <section class="premium-hero">
+      <div class="hero-bg-accent"></div>
       <v-container>
-        <v-row align="center" class="py-16">
-          <v-col cols="12" md="6" data-aos="fade-right">
-            <h1 class="text-h2 font-weight-black mb-6 primary--text line-height-tight">
-              Modern Shopping <br/>
-              <span class="secondary--text">Reimagined.</span>
+        <v-row align="center" class="min-vh-80">
+          <v-col cols="12" md="6" class="hero-content-wrapper">
+            <div class="badge-modern mb-6">
+              <v-icon x-small color="primary" class="mr-2">mdi-sparkles</v-icon>
+              <span>Next-Gen eCommerce Platform</span>
+            </div>
+            <h1 class="hero-title mb-6">
+              Shopping <span class="gradient-text">Redefined</span> <br/>
+              for the Modern Era.
             </h1>
-            <p class="text-h6 grey--text text--darken-1 mb-8">
-              Experience the next generation of eCommerce with ShopNova. Premium products, seamless checkout, and lightning-fast delivery.
+            <p class="hero-subtitle mb-8">
+              Experience the future of SaaS eCommerce. Premium brands, AI-driven recommendations, and lightning-fast global delivery.
             </p>
-            <div class="d-flex gap-4">
-              <v-btn x-large color="primary" rounded elevation="4" @click="$router.push('/products')" class="px-8">
-                Explore Shop
-                <v-icon right>mdi-arrow-right</v-icon>
+            <div class="hero-actions">
+              <v-btn x-large color="primary" rounded class="hero-btn-primary px-10 elevation-8" @click="$router.push('/products')">
+                Explore Store
+                <v-icon right>mdi-arrow-right-circle</v-icon>
               </v-btn>
-              <v-btn x-large outlined color="primary" rounded class="px-8" @click="$router.push('/categories')">
-                Categories
+              <v-btn x-large text color="primary" class="hero-btn-text ml-4" @click="$router.push('/categories')">
+                View Categories
               </v-btn>
             </div>
+            
+            <div class="hero-stats mt-12 d-none d-sm-flex">
+              <div class="stat-item mr-10">
+                <span class="stat-value">50k+</span>
+                <span class="stat-label">Active Users</span>
+              </div>
+              <div class="stat-item mr-10">
+                <span class="stat-value">120+</span>
+                <span class="stat-label">Premium Brands</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value">4.9/5</span>
+                <span class="stat-label">User Rating</span>
+              </div>
+            </div>
           </v-col>
-          <v-col cols="12" md="6" class="d-none d-md-block" data-aos="fade-left">
-            <div class="hero-image-container">
+          
+          <v-col cols="12" md="6" class="hero-visual-wrapper d-none d-md-block">
+            <div class="visual-stack">
+              <div class="blob-gradient"></div>
               <v-img 
-                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=800&q=80"
-                class="hero-image rounded-xl elevation-10"
-                height="450"
+                src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80"
+                class="hero-main-img elevate-premium"
+                height="500"
               />
-              <div class="floating-card glass-card pa-4">
-                <div class="d-flex align-center">
-                  <v-avatar color="success" size="48" class="mr-4">
-                    <v-icon color="white">mdi-check-decagram</v-icon>
-                  </v-avatar>
-                  <div>
-                    <div class="text-subtitle-2 font-weight-bold">Verified Seller</div>
-                    <div class="text-caption grey--text">SaaS Trusted Store</div>
-                  </div>
+              <div class="floating-notif animate-float">
+                <v-avatar color="white" size="48" class="mr-3">
+                  <v-icon color="success">mdi-check-circle</v-icon>
+                </v-avatar>
+                <div>
+                  <div class="text-caption font-weight-bold">Order Received</div>
+                  <div class="text-h6 font-weight-black">$1,240.00</div>
                 </div>
               </div>
             </div>
@@ -198,55 +218,164 @@ export default {
 </script>
 
 <style scoped>
-.hero-section {
-  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.05), transparent);
-}
-
-.hero-image-container {
+/* Premium Hero Section */
+.premium-hero {
   position: relative;
+  overflow: hidden;
+  padding: 80px 0;
+  background: white;
 }
 
-.floating-card {
+.hero-bg-accent {
   position: absolute;
-  bottom: -20px;
-  left: -20px;
-  min-width: 200px;
+  top: -10%;
+  right: -5%;
+  width: 60%;
+  height: 120%;
+  background: radial-gradient(circle at 70% 30%, rgba(14, 165, 233, 0.08), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.min-vh-80 {
+  min-height: 80vh;
+}
+
+.badge-modern {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(14, 165, 233, 0.08);
+  padding: 8px 16px;
+  border-radius: 100px;
+  color: #0ea5e9;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #1e293b;
+  letter-spacing: -2px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: #64748b;
+  max-width: 540px;
+}
+
+.hero-btn-primary {
+  text-transform: none !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+}
+
+.hero-btn-text {
+  text-transform: none !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+}
+
+.hero-stats {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 32px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* Visual Stack */
+.visual-stack {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.blob-gradient {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 70%);
+  filter: blur(40px);
+  z-index: 0;
+}
+
+.hero-main-img {
+  border-radius: 32px !important;
+  z-index: 1;
+  border: 8px solid white;
+}
+
+.elevate-premium {
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.15) !important;
+}
+
+.floating-notif {
+  position: absolute;
+  bottom: 40px;
+  right: -20px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
   z-index: 2;
 }
 
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Category Cards */
 .category-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 24px !important;
 }
 
 .category-card:hover {
-  background: var(--primary) !important;
+  transform: scale(1.05) translateY(-10px);
+  background: #0ea5e9 !important;
   color: white !important;
+  box-shadow: 0 20px 40px rgba(14,165,233,0.3) !important;
 }
 
 .category-card:hover .v-icon {
   color: white !important;
 }
 
-.line-height-tight {
-  line-height: 1.1;
-}
-
-.gap-4 {
-  gap: 16px;
-}
-
-.opacity-80 {
-  opacity: 0.8;
-}
-
-.floating-img {
-  animation: float 6s ease-in-out infinite;
-}
-
 @keyframes float {
-  0% { transform: translateY(0px); }
+  0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-20px); }
-  100% { transform: translateY(0px); }
+}
+
+@media (max-width: 960px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
 }
 </style>

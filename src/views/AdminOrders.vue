@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <AdminLayout>
     <div class="orders-content">
       <div class="page-header mb-6">
@@ -145,7 +145,7 @@
                 </thead>
                 <tbody>
                   <tr v-for="item in selectedOrder.items" :key="item.id" class="item-row">
-                    <td class="font-weight-medium">{{ item.product?.name || 'Product' }}</td>
+                    <td class="font-weight-medium">{{ item.name || 'Product' }}</td>
                     <td>{{ item.quantity }}</td>
                     <td>${{ item.price.toFixed(2) }}</td>
                     <td class="font-weight-bold">${{ (item.quantity * item.price).toFixed(2) }}</td>

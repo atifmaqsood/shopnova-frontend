@@ -176,10 +176,10 @@
               <h3 class="review-subtitle">Order Items</h3>
               <div v-for="item in items" :key="item.id" class="review-item">
                 <div class="review-item-name">
-                  {{ item.product.name }} × {{ item.quantity }}
+                  {{ item.name }} × {{ item.quantity || 0 }}
                 </div>
                 <div class="review-item-price">
-                  ${{ (item.product.price * item.quantity).toFixed(2) }}
+                  ${{ ((item.price || 0) * (item.quantity || 0)).toFixed(2) }}
                 </div>
               </div>
 
@@ -187,7 +187,7 @@
 
               <div class="review-total">
                 <span class="review-total-label">Total Amount</span>
-                <span class="review-total-value">${{ total.toFixed(2) }}</span>
+                <span class="review-total-value">${{ (total || 0).toFixed(2) }}</span>
               </div>
             </div>
 
@@ -205,6 +205,27 @@
               >
                 <v-icon left>mdi-check-circle</v-icon>
                 Place Order
+              </v-btn>
+            </div>
+          </div>
+
+          <!-- Step 4: Success -->
+          <div v-show="step === 4" class="step-content text-center py-12">
+            <v-avatar color="success" size="100" class="mb-6 elevation-10">
+              <v-icon size="60" color="white">mdi-check-bold</v-icon>
+            </v-avatar>
+            <h2 class="text-h4 font-weight-black mb-4">Order Received!</h2>
+            <p class="text-subtitle-1 grey--text mb-10">
+              Thank you for your purchase. <br/>
+              Your order is now being processed by our team.
+            </p>
+            <div class="d-flex justify-center flex-wrap gap-4">
+              <v-btn x-large color="primary" rounded class="px-8 mb-2" @click="$router.push('/orders')">
+                <v-icon left>mdi-package-variant</v-icon>
+                View My Orders
+              </v-btn>
+              <v-btn x-large outlined color="primary" rounded class="px-8 mb-2 ml-4" @click="$router.push('/')">
+                Continue Shopping
               </v-btn>
             </div>
           </div>
@@ -226,18 +247,18 @@
             <div class="summary-items">
               <div v-for="item in items" :key="item.id" class="summary-item">
                 <v-img
-                  :src="getProductImage(item.product)"
+                  :src="item.image"
                   height="60"
                   width="60"
                   class="summary-item-image"
                   contain
                 />
                 <div class="summary-item-details">
-                  <p class="summary-item-name">{{ item.product.name }}</p>
+                  <p class="summary-item-name">{{ item.name }}</p>
                   <p class="summary-item-qty">Qty: {{ item.quantity }}</p>
                 </div>
                 <div class="summary-item-price">
-                  ${{ (item.product.price * item.quantity).toFixed(2) }}
+                  ${{ ((item.price || 0) * (item.quantity || 0)).toFixed(2) }}
                 </div>
               </div>
             </div>
@@ -247,7 +268,7 @@
             <!-- Price Breakdown -->
             <div class="summary-row">
               <span class="summary-label">Subtotal</span>
-              <span class="summary-value">${{ total.toFixed(2) }}</span>
+              <span class="summary-value">${{ (total || 0).toFixed(2) }}</span>
             </div>
             <div class="summary-row">
               <span class="summary-label">Shipping</span>
@@ -258,7 +279,7 @@
 
             <div class="summary-row total-row">
               <span class="summary-label-total">Total</span>
-              <span class="summary-value-total">${{ total.toFixed(2) }}</span>
+              <span class="summary-value-total">${{ (total || 0).toFixed(2) }}</span>
             </div>
 
             <div class="secure-checkout">
@@ -281,7 +302,7 @@ export default {
   data() {
     return {
       step: 1,
-      steps: ['Shipping', 'Payment', 'Review'],
+      steps: ['Shipping', 'Payment', 'Review', 'Success'],
       selectedAddress: null,
       paymentMethod: 'cash',
       placing: false,
@@ -368,75 +389,62 @@ export default {
       })
     },
     async placeOrder() {
-      this.placing = true
+      if (this.placing) return;
+      this.placing = true;
       try {
-        const selectedAddr = this.addresses.find(addr => addr.id === this.selectedAddress)
+        const selectedAddr = this.addresses.find(addr => addr.id === this.selectedAddress);
         const shippingAddress = selectedAddr ? 
-          `${selectedAddr.street}, ${selectedAddr.city}, ${selectedAddr.state} ${selectedAddr.zipCode}, ${selectedAddr.country}` : ''
+          `${selectedAddr.street}, ${selectedAddr.city}, ${selectedAddr.state} ${selectedAddr.zipCode}, ${selectedAddr.country}` : 'Default Address';
         
-        let paymentIntentId = null
+        // --- FAKE PAYMENT PROCESS ---
+        // We simulate a network delay and a fake payment confirmation
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        if (this.paymentMethod === 'card') {
-          // 1. Create Payment Intent on Backend
-          const response = await this.$http.post('/payment/create-payment-intent', {
-            amount: this.total
-          })
-          
-          const clientSecret = response.data.clientSecret
-
-          // Mock stripe success if not real stripe
-          if (!this.stripe || this.stripeKey === 'pk_test_your_real_key_here' || this.stripeKey === 'pk_test_mock') {
-             await new Promise(r => setTimeout(r, 1500));
-             paymentIntentId = 'pi_mock_' + Date.now();
-          } else {
-            // 2. Confirm Card Payment
-            const result = await this.stripe.confirmCardPayment(clientSecret, {
-              payment_method: {
-                card: this.card,
-                billing_details: {
-                  name: selectedAddr?.name || 'Customer',
-                  address: {
-                    line1: selectedAddr?.street,
-                    city: selectedAddr?.city,
-                    state: selectedAddr?.state,
-                    postal_code: selectedAddr?.zipCode,
-                    country: 'US'
-                  }
-                }
-              }
-            })
-            
-            if (result.error) throw new Error(result.error.message)
-            if (result.paymentIntent.status === 'succeeded') {
-              paymentIntentId = result.paymentIntent.id
-            } else {
-              throw new Error('Payment failed')
-            }
-          }
-        }
+        const paymentIntentId = 'pi_mock_' + Math.random().toString(36).substr(2, 9);
         
         const orderData = {
+          items: this.items.map(item => ({
+            productId: item.productId,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            image: item.image
+          })),
+          total: this.total,
           shippingAddress,
           paymentMethod: this.paymentMethod,
-          paymentIntentId // Pass this to backend to link order with payment
-        }
+          paymentStatus: 'Paid',
+          paymentIntentId,
+          userId: this.$store.getters['auth/user']?.id || 1,
+          user: {
+            name: this.$store.getters['auth/user']?.name || 'Demo User',
+            email: this.$store.getters['auth/user']?.email || 'demo@example.com'
+          }
+        };
         
-        await this.$store.dispatch('orders/createOrder', orderData)
+        // Call the mock API
+        await this.$store.dispatch('orders/createOrder', orderData);
         
+        // Show success notification
         this.$store.dispatch('ui/showSnackbar', {
           message: 'Order placed successfully!',
           color: 'success'
-        })
+        });
         
-        this.$router.push('/account')
+        // Move to a success state/page
+        this.step = 4;
+        
+        // Clear local cart just in case
+        this.$store.dispatch('cart/clearCart');
+
       } catch (error) {
-        console.error('Order placement error:', error)
+        console.error('Order placement error:', error);
         this.$store.dispatch('ui/showSnackbar', {
-          message: error.message || error.response?.data?.message || 'Failed to place order',
+          message: 'Failed to place order. Please try again.',
           color: 'error'
-        })
+        });
       } finally {
-        this.placing = false
+        this.placing = false;
       }
     },
     getProductImage(product) {

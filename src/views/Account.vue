@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="account-page">
     <!-- Header Section with Gradient Background -->
     <section class="profile-header-modern">
@@ -99,7 +99,7 @@
                   <v-icon size="40" color="white">mdi-map-marker</v-icon>
                 </div>
                 <div class="stat-content">
-                  <div class="stat-value">2</div>
+                  <div class="stat-value">{{ addresses.length }}</div>
                   <div class="stat-label">Addresses</div>
                 </div>
                 <v-icon class="stat-arrow">mdi-chevron-right</v-icon>
@@ -355,7 +355,8 @@ export default {
   computed: {
     ...mapGetters({
       user: 'auth/user',
-      unreadCount: 'notifications/unreadCount'
+      unreadCount: 'notifications/unreadCount',
+      addresses: 'user/addresses'
     }),
     profileImage() {
       if (this.user?.profileImage) {
@@ -369,6 +370,7 @@ export default {
   },
   async created() {
     this.$store.dispatch('notifications/fetchUnreadCount')
+    this.$store.dispatch('user/fetchAddresses')
     await this.fetchRecentOrders()
   },
   methods: {
@@ -391,12 +393,11 @@ export default {
         console.warn('Failed to fetch recent orders:', error.message)
       }
     },
+    viewOrderDetails(id) {
+      this.$router.push(`/orders/${id}`).catch(() => {})
+    },
     viewOrders() {
-      // Navigate to orders page when implemented
-      this.$store.dispatch('ui/showSnackbar', {
-        message: 'Orders page coming soon!',
-        color: 'info'
-      })
+      this.$router.push('/orders').catch(() => {})
     },
     viewNotifications() {
       if (this.$route.path !== '/notifications') {
@@ -483,9 +484,6 @@ export default {
       this.showImageUpload = false
       this.selectedImage = null
       this.imagePreview = null
-    },
-    viewOrderDetails(orderId) {
-      this.$router.push(`/orders/${orderId}`)
     }
   },
   watch: {

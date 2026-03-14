@@ -168,13 +168,13 @@ export default {
   methods: {
     async fetchData() {
       try {
-        const response = await this.$http.get('/admin/dashboard')
-        const data = response.data
+        const { mockApiService } = await import('@/services/mockApiService')
+        const data = await mockApiService.getDashboardStats()
         this.stats = data.stats
         this.recentOrders = data.recentOrders
-        this.topProducts = data.topProducts
+        this.topProducts = data.topProducts || []
       } catch (e) {
-        console.error(e)
+        console.error('Failed to fetch dashboard data:', e)
       }
     },
     getStatusColor(status) {

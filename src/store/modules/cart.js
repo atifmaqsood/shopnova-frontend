@@ -34,18 +34,18 @@ const actions = {
     }
   },
 
-  async addToCart({ dispatch }, { productId, quantity }) {
-    await cartService.addToCart({ productId, quantity })
+  async addToCart({ dispatch }, itemData) {
+    await cartService.addToCart(itemData)
     await dispatch('fetchCart')
   },
 
-  async updateCartItem({ dispatch }, { itemId, quantity }) {
-    await cartService.updateCartItem(itemId, { quantity })
+  async updateCartItem({ dispatch }, { productId, quantity }) {
+    await cartService.updateCartItem(productId, { quantity })
     await dispatch('fetchCart')
   },
 
-  async removeFromCart({ dispatch }, itemId) {
-    await cartService.removeFromCart(itemId)
+  async removeFromCart({ dispatch }, productId) {
+    await cartService.removeFromCart(productId)
     await dispatch('fetchCart')
   },
 
