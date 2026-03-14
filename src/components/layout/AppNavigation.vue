@@ -32,6 +32,17 @@
           <v-btn text class="nav-link-btn" @click="$router.push('/')">Home</v-btn>
           <v-btn text class="nav-link-btn" @click="$router.push('/products')">Store</v-btn>
           
+          <!-- Admin Dashboard Link (Desktop) -->
+          <v-btn 
+            v-if="isAuthenticated && isAdmin" 
+            text 
+            class="nav-link-btn admin-btn-pulse" 
+            @click="$router.push('/admin')"
+          >
+            <v-icon left size="18" color="amber darken-2">mdi-shield-crown</v-icon>
+            Admin Console
+          </v-btn>
+          
           <v-menu offset-y open-on-hover transition="slide-y-transition">
             <template v-slot:activator="{ on, attrs }">
               <v-btn text class="nav-link-btn" v-bind="attrs" v-on="on">
@@ -183,6 +194,13 @@
             <v-icon color="primary">mdi-home</v-icon>
           </v-list-item-icon>
           <v-list-item-title class="font-weight-medium">Home</v-list-item-title>
+        </v-list-item>
+
+        <v-list-item v-if="isAuthenticated && isAdmin" @click="$router.push('/admin'); $store.dispatch('ui/toggleDrawer')" class="nav-item admin-nav-item">
+          <v-list-item-icon>
+            <v-icon color="amber darken-2">mdi-shield-crown</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title class="font-weight-bold amber--text text--darken-4">Admin Console</v-list-item-title>
         </v-list-item>
 
         <v-list-item @click="$router.push('/products')" class="nav-item">
@@ -444,6 +462,35 @@ export default {
   .logo-tag, .logo-text-group {
     display: none !important;
   }
+}
+
+.admin-btn-pulse {
+  position: relative;
+  overflow: visible;
+}
+
+.admin-btn-pulse::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  background: #f59e0b;
+  border-radius: 50%;
+  animation: pulse-amber 2s infinite;
+}
+
+@keyframes pulse-amber {
+  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+  70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+}
+
+.admin-nav-item {
+  background: rgba(245, 158, 11, 0.05) !important;
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
 }
 </style>
 ```

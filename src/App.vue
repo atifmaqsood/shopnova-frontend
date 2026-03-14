@@ -15,15 +15,9 @@
     </template>
     <AppSnackbar />
     <AppLoader />
-
-    <!-- Demo Mode Indicator -->
-    <div class="demo-mode-badge" v-if="!isAdminRoute">
-      <v-icon color="white" small>mdi-information-outline</v-icon>
-      <span>Demo Mode: Frontend-only</span>
-      <v-btn x-small text color="white" class="ml-2 font-weight-bold" @click="resetDemoData">
-        Reset Data
-      </v-btn>
-    </div>
+    
+    <!-- Demo Assistant FAB -->
+    <DemoToolbar />
   </v-app>
 </template>
 
@@ -39,7 +33,8 @@ export default {
     AppNavigation,
     Footer,
     AppSnackbar,
-    AppLoader
+    AppLoader,
+    DemoToolbar: () => import('./components/layout/DemoToolbar.vue')
   },
   computed: {
     isAdminRoute() {
@@ -56,15 +51,6 @@ export default {
       await this.$store.dispatch('categories/fetchCategories')
     } catch (error) {
       console.warn('App initialization error:', error.message)
-    }
-  },
-  methods: {
-    async resetDemoData() {
-      if (confirm('Are you sure you want to reset all demo data? This will restore initial products and categories.')) {
-        const { mockApiService } = await import('./services/mockApiService');
-        mockApiService.resetData();
-        window.location.reload();
-      }
     }
   }
 }
